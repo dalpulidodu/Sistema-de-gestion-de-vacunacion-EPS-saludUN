@@ -1,14 +1,15 @@
-##########################################################################################################
-#                                        Bussisnes logic
-##########################################################################################################
-
+import os
 import sqlite3
 from sqlite3 import Error
 
+##########################################################################################################
+#                                             Data
+##########################################################################################################
+
 def sql_connection():
-    '''
+    """
     Funcion que crea la base de datos
-    '''
+    """
     try:
         con = sqlite3.connect('db.db')
         print("Conexion realizada: DB creada")
@@ -16,61 +17,77 @@ def sql_connection():
     except Error:
         print('Se ha prodicido un error al crear la conexion',Error)
 
-def create_table(con):
+def create_table_affiliate(con):
     """
-    Se crea el objeto de conexión.
-    El objeto cursor se crea utilizando el objeto de conexión
-    se ejecuta el método execute con la consulta CREATE TABLE como parámetro         
+    Funcion que crea una tabla con los parametros de un afiliado
+    (id,nombre, apellidos,direccion, telefono, email, ciudad, nacimiento,fecha de afiliacion, fecha de desafiliacion, vacunado)
+             
     """
     cursorObj = con.cursor()
     cursorObj.execute("CREATE TABLE IF NOT EXISTS afiliados(id integer PRIMARY KEY,nombre text,apellidos text,direccion text,telefono real,email text, ciudad text,nacimiento text,afiliacion text,desafiliacion text,vacunado text)")
     con.commit()
     
-def read_info():
-    id=(input("numero de identificacion"))
-    id=id.ljust(12)
-    #id=int(id)
-    nombre=(input("nombre"))
+def read_info_affiliate():
+    
+    """
+    Funcion que lee la informacion de un afiliado y la retorna como una cadena de caracteres
+    """
+    correct_type = False
+    while not correct_type:   
+        try:
+            id=(input("numero de identificacion"))
+            id=id.ljust(12)
+            correct_type = True
+        except:
+            print('Entrada invalida, intentelo de nuevo')
+    
+    nombre=(input("nombre: "))
     nombre = nombre.ljust(20)
-    apellido=(input("apellido"))
+    
+    apellido=(input("apellido: "))
     apellido = apellido.ljust(20)
-    direccion=(input("direccion"))
+    
+    direccion=(input("direccion: "))
     direccion = direccion.ljust(20)
-    telefono=(input("telefono"))
-    telefono = telefono.ljust(12)
-    email=(input("email"))
+    
+    correct_type = False
+    while not correct_type:   
+        try:
+            telefono=(input("telefono: "))
+            telefono = telefono.ljust(12)
+            correct_type = True
+        except:
+            print('Entrada invalida, intentelo de nuevo')
+        
+    email=(input("email: "))
     email = email.ljust(20)
-    ciudad=(input("ciudad"))
-    ciudad = ciudad.ljust(20)
-    dianac=(input("dia nacimiento:  "))
-    dianac = dianac.rjust(2,"0")
-    mesnac = (input("mes nacimiento:  "))
-    mesnac = mesnac.rjust(2,"0")
-    anonac = (input("ano nacimiento:  "))
-    anonac = anonac.rjust(4)
-    nacimiento=dianac+"/"+mesnac+"/"+anonac
-    print("nacimiento",nacimiento)
+    
+    ciudad=(input("ciudad: "))
+    ciudad = ciudad.ljust(20)    
+    
+       
+    nacimiento = read_date('nacimiento')
 
-    afiliacion = (input("afiliacion"))
-    desafiliacion = (input("desafiliacion"))
-    #vacunado = (input("vacunado"))
+    afiliacion = read_date('afiliacion')
+    
+    desafiliacion = read_date('desafiliacion')   
+        
     salir=False
     while not salir:
         vacunado=(input("fue vacunado?"))
         if (vacunado=='N' or vacunado=='n'):
             salir=True
+            
     afiliado=(id ,nombre,apellido ,direccion,telefono ,email, ciudad ,nacimiento,afiliacion,desafiliacion,vacunado )
     return afiliado
 
-def insert_table(con,afiliado):
+def insert_affiliate(con,afiliado):
     """ Funcion que se utiliza para operar en la base de datos"""
     cursorObj = con.cursor()
     cursorObj.execute('''INSERT INTO afiliados (id ,nombre,apellidos ,direccion,telefono ,email, ciudad ,nacimiento,afiliacion,desafiliacion,vacunado) VALUES(?, ?, ?, ?,?,?,?, ?, ?, ?,?)''',afiliado)
-
-
     con.commit()
 
-def update_table(con):
+def update_affiliate(con):
     """ Funcion que se utiliza para operar en la base de datos"""
     cursorObj = con.cursor()
     vacunado=input("identificacion del afiliado vacunado: ")
@@ -79,7 +96,7 @@ def update_table(con):
     print("No los veo")
     con.commit()
 
-def sql_fetch(con):
+def sql_fetch_affiliate(con):
     cursorObj = con.cursor()
     afiliad=input("id del afiliado a consultar: ")
     buscar='SELECT * FROM afiliados where id= '+afiliad
@@ -99,20 +116,109 @@ def close_db(con):
     con.close()    
 
 ##########################################################################################################
-#                                             Data
+#                                        Bussisnes logic
 ##########################################################################################################
+def read_date(word):
+    """
+    Funcion que lee una fecha infresada por el usuario y la convierte a formato de texto con el formato ISO 8601
+    AAAA/MM/DD
+    """
+    print(word)
+    dia=(input("dia "+word+": "))
+    dia = dia.rjust(2,"0")
+    
+    mes = (input("mes "+word+": "))
+    mes= mes.rjust(2,"0")
+    
+    ano = (input("ano "+word+": "))
+    ano= ano.rjust(4)
+    
+    date=dia+"/"+mes+"/"+ano
+    print(word,date)
+    
+    return date
+
 
 ##########################################################################################################
 #                                        Presentation
 ##########################################################################################################
+def clear_screen():
+    '''
+    Limpia la consola
+    '''
+    if os.name == "posix":
+        os.system ("clear")
+    elif os.name == "ce" or os.name == "nt" or os.name == "dos":
+        os.system ("cls")
 
+def menu():
+    clear_screen()
+    print('#############################################################################################')
+    print('                      Sistema de gestion de vacunacion EPS saludUN')    
+    print('#############################################################################################')
+    print('Seleccione una opcion')
+    print('1. Afiliados')
+    print('2. Vacunas')
+    print('3. Plan de vacunacion')
+    print('e. Salir')
+    print()
 
+def menu_affiliate():
+    clear_screen()
+    print('#############################################################################################')
+    print('                                   Afiliados')    
+    print('#############################################################################################')
+    print('Seleccione una opcion')
+    print('1. Ingresar nuevo afiliado')
+    print('2. Actualizar estado de afiliado')
+    print('3. Consultar afiliado')
+    print('b. Volver al menu anterior')
+    print('e. Salir')
+    print()
+    
 def main():
+    
     con=sql_connection()
-    #create_table(con)
-    #afiliado=read_info()
-    #insert_table(con,afiliado)
-    #update_table(con)
-    sql_fetch(con)
-    cerrar_db(con)
+    create_table_affiliate(con)
+    
+    salir=False
+    while not salir:
+                    
+        menu()
+        option = input('Ingrese una opcion: ')
+            
+        if(option == '1'): # menu afiliado
+              
+            back = False
+            while not back:              
+                
+                menu_affiliate()  
+                option = input('Ingrese una opcion: ')
+                    
+                if(option == '1'):  # ingresar nuevo afiliado                  
+                    afiliado=read_info_affiliate()
+                    insert_affiliate(con,afiliado)
+                elif(option == '2'): # Actualizar estado de afiliado  
+                    update_affiliate(con)
+                elif(option == '3'): # Consultar afiliado
+                    sql_fetch_affiliate(con)
+                    input('Presione cualquier tecla para continuar')
+                elif(option == 'b' or option == 'B'): # Volver al menu anterior
+                    back = True
+                elif(option == 'e' or option == 'E'): # Salir del programa
+                    back = True
+                    salir = True
+                else:
+                    print('Opcion no valida')
+        elif(option == '2'):
+            print()
+        elif(option == '3'): 
+            print()
+        elif(option == 'e' or option == 'E'):
+            salir = True
+        else:    
+            print('Opcion no valida')
+    
+    close_db(con)
+    
 main()
