@@ -34,10 +34,12 @@ def read_info_affiliate():
     """
     Funcion que lee la informacion de un afiliado y la retorna como una cadena de caracteres
     """
+    
     correct_type = False
     while not correct_type:   
         try:
-            id=(input("numero de identificacion"))
+            i=int(input("numero de identificacion: "))
+            id = str(i)
             id=id.ljust(12)
             correct_type = True
         except:
@@ -55,7 +57,8 @@ def read_info_affiliate():
     correct_type = False
     while not correct_type:   
         try:
-            telefono=(input("telefono: "))
+            t=int(input("telefono: "))
+            telefono=str(t)
             telefono = telefono.ljust(12)
             correct_type = True
         except:
@@ -72,13 +75,10 @@ def read_info_affiliate():
 
     afiliacion = read_date('afiliacion')
     
-    desafiliacion = read_date('desafiliacion')   
+    desafiliacion = '00/00/0000'        
+    
+    vacunado='no'
         
-    salir=False
-    while not salir:
-        vacunado=(input("fue vacunado?"))
-        if (vacunado=='N' or vacunado=='n'):
-            salir=True
             
     afiliado=(id ,nombre,apellido ,direccion,telefono ,email, ciudad ,nacimiento,afiliacion,desafiliacion,vacunado )
     return afiliado
@@ -89,57 +89,110 @@ def insert_affiliate(con,afiliado):
     cursorObj.execute('''INSERT INTO afiliados (id ,nombre,apellidos ,direccion,telefono ,email, ciudad ,nacimiento,afiliacion,desafiliacion,vacunado) VALUES(?, ?, ?, ?,?,?,?, ?, ?, ?,?)''',afiliado)
     con.commit()
 
-def update_affiliate(con):
+def update_affiliate_vaccine(con):
     """ Funcion que se utiliza para operar en la base de datos"""
     cursorObj = con.cursor()
     vacunado=input("identificacion del afiliado vacunado: ")
-    actualizar='update afiliados SET vacunado = "s" where id ='+vacunado
+    actualizar='update afiliados SET vacunado = "si" where id ='+vacunado
     cursorObj.execute(actualizar)
-    print("No los veo")
+    con.commit()
+    
+def update_disaffiliated(con):
+    """ Funcion que se utiliza para operar en la base de datos"""
+    cursorObj = con.cursor()
+    desafiliado=input("identificacion del afiliado a desafiliar: ")
+    fecha = date_to_string(date.today())  
+    print(fecha)      
+    actualizar='update afiliados SET desafiliacion = "'+fecha+'" where id ='+desafiliado
+    cursorObj.execute(actualizar)
     con.commit()
 
-def sql_fetch_affiliate(con):
+def sql_fetch_affiliate(con):    
     cursorObj = con.cursor()
     afiliad=input("id del afiliado a consultar: ")
     buscar='SELECT * FROM afiliados where id= '+afiliad
     cursorObj.execute(buscar)
     filas = cursorObj.fetchall()
-    print("Vere:  ", len(filas), " filas")
+    print()
+    header=('id: ', 'Nombre: ','Apellidos: ', 'Direccion: ','Telefono:', 'Email: ','Ciudad: ','Nacimiento: ', 'Fecha de afiliacion: ', 'Fecha de desafiliacion: ', 'Vacunado: ')
     for row in filas:
-        print("el tipo de datos de row es:", type(row))
-        id=row[0]
-        nombre=row[1]
-        print(" la info de la tupla es: ", id, " y ", nombre)
-
-        print(row)
+        for i in range(11):            
+            print(header[i]+''+str(row[i]))
     con.commit()
-
+    print()
+    
 def close_db(con):
     con.close()    
 
 ##########################################################################################################
 #                                        Bussisnes logic
 ##########################################################################################################
+def date_to_string(date):
+    
+    f = date.isoformat().split('-')
+    return str(f[2])+'/'+str(f[1])+'/'+str(f[0])
+
 def read_date(word):
     """
-    Funcion que lee una fecha infresada por el usuario y la convierte a formato de texto con el formato ISO 8601
-    AAAA/MM/DD
+    Funcion que lee una fecha infresada por el usuario y la convierte a formato de texto DD/MM/AAAA
     """
-    print(word)
-    
-    dia=(input("dia "+word+": "))
-    dia = dia.rjust(2,"0")
-    
-    mes = (input("mes "+word+": "))
-    mes= mes.rjust(2,"0")
-    
-    ano = (input("ano "+word+": "))
-    ano= ano.rjust(4)
-    
-    date=ano+"-"+mes+"-"+dia
-    print(word,date)
-    
-    return date
+    correct_date = False
+    while not correct_date :
+        print()
+        print(word)
+        
+        correct_type = False
+        while not correct_type:   
+            try:
+                d=int(input("dia "+word+": "))
+                if(d>=0 and d<=31):
+                    dia= str(d)
+                    dia = dia.rjust(2,"0")
+                    correct_type = True
+                else:                    
+                    raise 
+            except:
+                print('Entrada invalida, intentelo de nuevo')
+                    
+        correct_type = False        
+        while not correct_type:   
+            try:
+                m=int(input("mes "+word+": "))
+                if(m>=0 and m<=12):
+                    mes = str(m)
+                    mes= mes.rjust(2,"0")
+                    correct_type = True
+                else:
+                    raise
+            except:
+                print('Entrada invalida, intentelo de nuevo')
+           
+        
+        correct_type = False        
+        while not correct_type:   
+            try:
+                
+                a=int(input("ano "+word+": "))
+                if(a>=0):
+                    ano = str(a)
+                    ano= ano.rjust(4,"0")
+                    correct_type = True
+                else:
+                    raise ValueError
+            except:
+                print('Entrada invalida, intentelo de nuevo')         
+                  
+        date_aux =ano+"-"+mes+"-"+dia
+        
+   
+        if date_aux == '0000-00-00':
+            correct_date = True
+        elif date.fromisoformat(date_aux) > date.today():
+            print('Fecha fuera de rango, intentelo de nuevo.')
+        else:
+            correct_date = True
+                 
+    return dia+"/"+mes+"/"+ano
 
 
 ##########################################################################################################
@@ -165,7 +218,7 @@ def menu():
     
     Seleccione una opcion:
     1. Gestion de afiliados
-    2. Gestion lotes de vacunas')
+    2. Gestion lotes de vacunas
     3. Gestion Plan de vacunacion
     4. Agenda de vacunacion
     e. Salir
@@ -187,11 +240,50 @@ def menu_affiliate():
     
     ''')
     
+def menu_new_affiliate():
+     clear_screen()
+     print('''#############################################################################################
+                                     Nuevo Afiliado  
+#############################################################################################
+    Ingrese los datos del nuevo afiliado:
+    
+    
+    ''')
+    
+def menu_state_affiliate():
+     clear_screen()
+     print('''#############################################################################################
+                                     Estado del Afiliado  
+#############################################################################################
+    
+    1. Vacunacion
+    2. Desafiliacion
+    b. Volver
+    e. Salir
+    
+    
+    ''')
+    
+
+def menu_info_affiliate():
+    clear_screen()
+    print('''#############################################################################################
+                                     Consulta Afiliado  
+#############################################################################################
+    Ingrese el numero de identificacion del afiliado para ver su informacion:
+    
+    
+    ''')
+
+def header_info_ffiliate():
+     clear_screen()
+     print('')
     
 def main():    
     
     con=sql_connection()
     create_table_affiliate(con)
+    
     
     salir=False
     while not salir:
@@ -207,14 +299,38 @@ def main():
                 menu_affiliate()  
                 option = input('Ingrese una opcion: ')
                     
-                if(option == '1'):  # ingresar nuevo afiliado                  
+                if(option == '1'):  # ingresar nuevo afiliado
+                    menu_new_affiliate()                  
                     afiliado=read_info_affiliate()
                     insert_affiliate(con,afiliado)
-                elif(option == '2'): # Actualizar estado de afiliado  
-                    update_affiliate(con)
+                    input('Nuevo afiliado registrado. Presione cualquier tecla para continuar...')
+                    
+                elif(option == '2'): # Actualizar estado de afiliado
+                    
+                    back = False
+                    while not back:
+                        menu_state_affiliate()
+                        option = input('Ingrese una opcion: ')
+                        if(option=='1'): #Vacunacion
+                            update_affiliate_vaccine(con)
+                            input('Presione cualquier tecla para continuar...')
+                        elif(option == '2'): #Desafiliacion
+                            update_disaffiliated(con)
+                            input('Presione cualquier tecla para continuar...')
+                        elif(option == 'b' or option == 'B'): # Volver al menu anterior
+                            back = True
+                        elif(option == 'e' or option == 'E'): # Salir del programa
+                            back = True
+                            salir = True
+                        else:
+                            print('Opcion no valida')
+                
+                    
                 elif(option == '3'): # Consultar afiliado
+                    menu_info_affiliate()
                     sql_fetch_affiliate(con)
-                    input('Presione cualquier tecla para continuar')
+                    input('Presione cualquier tecla para continuar...')
+                    
                 elif(option == 'b' or option == 'B'): # Volver al menu anterior
                     back = True
                 elif(option == 'e' or option == 'E'): # Salir del programa
