@@ -1,3 +1,5 @@
+from datetime import datetime
+from datetime import date
 import os
 import sqlite3
 from sqlite3 import Error
@@ -124,6 +126,7 @@ def read_date(word):
     AAAA/MM/DD
     """
     print(word)
+    
     dia=(input("dia "+word+": "))
     dia = dia.rjust(2,"0")
     
@@ -133,7 +136,7 @@ def read_date(word):
     ano = (input("ano "+word+": "))
     ano= ano.rjust(4)
     
-    date=dia+"/"+mes+"/"+ano
+    date=ano+"-"+mes+"-"+dia
     print(word,date)
     
     return date
@@ -153,30 +156,39 @@ def clear_screen():
 
 def menu():
     clear_screen()
-    print('#############################################################################################')
-    print('                      Sistema de gestion de vacunacion EPS saludUN')    
-    print('#############################################################################################')
-    print('Seleccione una opcion')
-    print('1. Afiliados')
-    print('2. Vacunas')
-    print('3. Plan de vacunacion')
-    print('e. Salir')
-    print()
+    print(
+    '''#############################################################################################
+                           Sistema de gestion de vacunacion EPS saludUN   
+#############################################################################################
+                                  
+                                       Menu principal
+    
+    Seleccione una opcion:
+    1. Gestion de afiliados
+    2. Gestion lotes de vacunas')
+    3. Gestion Plan de vacunacion
+    4. Agenda de vacunacion
+    e. Salir
+    
+    ''')
 
 def menu_affiliate():
     clear_screen()
-    print('#############################################################################################')
-    print('                                   Afiliados')    
-    print('#############################################################################################')
-    print('Seleccione una opcion')
-    print('1. Ingresar nuevo afiliado')
-    print('2. Actualizar estado de afiliado')
-    print('3. Consultar afiliado')
-    print('b. Volver al menu anterior')
-    print('e. Salir')
-    print()
+    print('''#############################################################################################
+                                     Afiliados  
+#############################################################################################
     
-def main():
+    Seleccione una opcion:
+    1. Ingresar nuevo afiliado
+    2. Actualizar estado de afiliado
+    3. Consultar afiliado
+    b. Volver al menu anterior
+    e. Salir
+    
+    ''')
+    
+    
+def main():    
     
     con=sql_connection()
     create_table_affiliate(con)
