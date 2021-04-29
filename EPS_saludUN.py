@@ -124,6 +124,164 @@ def sql_fetch_affiliate(con):
 def close_db(con):
     con.close()    
 
+
+##########################################################################################################
+#                                        Presentation
+##########################################################################################################
+
+def clear_screen():
+    '''
+    Limpia la consola
+    '''
+    if os.name == "posix":
+        os.system ("clear")
+    elif os.name == "ce" or os.name == "nt" or os.name == "dos":
+        os.system ("cls")
+
+def menu():
+    clear_screen()
+    print(
+    '''#############################################################################################
+                           Sistema de gestion de vacunacion EPS saludUN   
+#############################################################################################
+                                  
+                                       Menu principal
+    
+    Seleccione una opcion:
+    1. Gestion de afiliados
+    2. Gestion lotes de vacunas
+    3. Gestion Plan de vacunacion
+    4. Agenda de vacunacion
+    e. Salir
+    
+    ''')
+
+def menu_affiliate():
+    clear_screen()
+    print('''#############################################################################################
+                                     Afiliados  
+#############################################################################################
+    
+    Seleccione una opcion:
+    1. Ingresar nuevo afiliado
+    2. Actualizar estado de afiliado
+    3. Consultar afiliado
+    b. Volver al menu anterior
+    e. Salir
+    
+    ''')
+    
+def menu_new_affiliate():
+     clear_screen()
+     print('''#############################################################################################
+                                     Nuevo Afiliado  
+#############################################################################################
+    Ingrese los datos del nuevo afiliado:
+    
+    
+    ''')
+    
+def menu_state_affiliate():
+     clear_screen()
+     print('''#############################################################################################
+                                     Estado del Afiliado  
+#############################################################################################
+    
+    1. Vacunacion
+    2. Desafiliacion
+    b. Volver
+    e. Salir
+    
+    
+    ''')
+    
+def menu_info_affiliate():
+    clear_screen()
+    print('''#############################################################################################
+                                     Consulta Afiliado  
+#############################################################################################
+    Ingrese el numero de identificacion del afiliado para ver su informacion:
+    
+    
+    ''')
+
+def menu_vaccine():
+    clear_screen()
+    print('''#############################################################################################
+                                     Gestion lotes de vacunas 
+#############################################################################################
+    
+    Seleccione una opcion:
+    1. Ingresar nuevo lote de vacunacion
+    2. Consultar lote de vacunacion
+    b. Volver al menu anterior
+    e. Salir
+    
+    ''')
+    
+def menu_new_vaccine():
+    clear_screen()
+    print('''#############################################################################################
+                                     Nuevo lote de vacunas 
+#############################################################################################
+    
+    Ingrese el nuevo lote de vacunacion:
+    
+    ''')
+    
+def menu_info_vaccine():
+    clear_screen()
+    print('''#############################################################################################
+                                     Consultar lote de vacunas 
+#############################################################################################
+    
+    Ingrese el numero de lote de vacunacion a consultar:
+    
+    ''')    
+    
+def menu_plan_vaccine():
+    clear_screen()
+    print('''#############################################################################################
+                                     Gestion plan de vacunacion 
+#############################################################################################
+    
+    Seleccione una opcion:
+    1. Crear plan de vacunacion
+    2. Consultar plan de vacunacion
+    b. Volver al menu anterior
+    e. Salir
+    
+    ''')    
+
+def menu_new_plan_vaccine():
+    clear_screen()
+    print('''#############################################################################################
+                                     Nuevo Plan de vacunas 
+#############################################################################################
+    
+    Ingrese el nuevo lote de vacunacion:
+    
+    ''')
+    
+def menu_info_plan_vaccine():
+    clear_screen()
+    print('''#############################################################################################
+                                     Consultar Plan de vacunas 
+#############################################################################################
+    
+    Ingrese el numero de plan de vacunacion a consultar:
+    
+    ''')  
+
+def menu_calendar_vaccune():
+    print('''#############################################################################################
+                                     Calendario de vacunacion
+#############################################################################################
+    
+    Programacion de citas de vacunacion
+    
+    ''')
+    
 ##########################################################################################################
 #                                        Bussisnes logic
 ##########################################################################################################
@@ -193,91 +351,6 @@ def read_date(word):
             correct_date = True
                  
     return dia+"/"+mes+"/"+ano
-
-
-##########################################################################################################
-#                                        Presentation
-##########################################################################################################
-def clear_screen():
-    '''
-    Limpia la consola
-    '''
-    if os.name == "posix":
-        os.system ("clear")
-    elif os.name == "ce" or os.name == "nt" or os.name == "dos":
-        os.system ("cls")
-
-def menu():
-    clear_screen()
-    print(
-    '''#############################################################################################
-                           Sistema de gestion de vacunacion EPS saludUN   
-#############################################################################################
-                                  
-                                       Menu principal
-    
-    Seleccione una opcion:
-    1. Gestion de afiliados
-    2. Gestion lotes de vacunas
-    3. Gestion Plan de vacunacion
-    4. Agenda de vacunacion
-    e. Salir
-    
-    ''')
-
-def menu_affiliate():
-    clear_screen()
-    print('''#############################################################################################
-                                     Afiliados  
-#############################################################################################
-    
-    Seleccione una opcion:
-    1. Ingresar nuevo afiliado
-    2. Actualizar estado de afiliado
-    3. Consultar afiliado
-    b. Volver al menu anterior
-    e. Salir
-    
-    ''')
-    
-def menu_new_affiliate():
-     clear_screen()
-     print('''#############################################################################################
-                                     Nuevo Afiliado  
-#############################################################################################
-    Ingrese los datos del nuevo afiliado:
-    
-    
-    ''')
-    
-def menu_state_affiliate():
-     clear_screen()
-     print('''#############################################################################################
-                                     Estado del Afiliado  
-#############################################################################################
-    
-    1. Vacunacion
-    2. Desafiliacion
-    b. Volver
-    e. Salir
-    
-    
-    ''')
-    
-
-def menu_info_affiliate():
-    clear_screen()
-    print('''#############################################################################################
-                                     Consulta Afiliado  
-#############################################################################################
-    Ingrese el numero de identificacion del afiliado para ver su informacion:
-    
-    
-    ''')
-
-def header_info_ffiliate():
-     clear_screen()
-     print('')
     
 def main():    
     
@@ -338,10 +411,52 @@ def main():
                     salir = True
                 else:
                     print('Opcion no valida')
-        elif(option == '2'):
-            print()
-        elif(option == '3'): 
-            print()
+                    
+        elif(option == '2'):#menu gestion lotes de vacunas
+            back = False
+            while not back:
+                menu_vaccine()
+                option = input('Ingrese una opcion: ')
+                if(option=='1'): #crear lote Vacunacion
+                    menu_new_vaccine()
+                    #
+                    input('Presione cualquier tecla para continuar...')
+                elif(option == '2'): #consultar lote vacunacion
+                    menu_info_vaccine()
+                    #
+                    input('Presione cualquier tecla para continuar...')
+                elif(option == 'b' or option == 'B'): # Volver al menu anterior
+                    back = True
+                elif(option == 'e' or option == 'E'): # Salir del programa
+                    back = True
+                    salir = True
+                else:
+                    print('Opcion no valida')
+                    
+        elif(option == '3'):#menu gestion plan de vacunacion 
+            back = False
+            while not back:
+                menu_plan_vaccine()
+                option = input('Ingrese una opcion: ')
+                if(option=='1'): #crear plan de Vacunacion
+                    menu_new_plan_vaccine()
+                    #
+                    input('Presione cualquier tecla para continuar...')
+                    
+                elif(option == '2'): #consultar plan de vacunacion
+                    menu_info_plan_vaccine()
+                    #
+                    input('Presione cualquier tecla para continuar...')
+                elif(option == 'b' or option == 'B'): # Volver al menu anterior
+                    back = True
+                elif(option == 'e' or option == 'E'): # Salir del programa
+                    back = True
+                    salir = True
+                else:
+                    print('Opcion no valida')
+                    
+        elif(option == '4'): #♦menu agenda de vacunacion
+            menu_calendar_vaccune()            
         elif(option == 'e' or option == 'E'):
             salir = True
         else:    
