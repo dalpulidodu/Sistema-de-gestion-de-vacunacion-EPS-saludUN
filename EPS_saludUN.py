@@ -50,7 +50,7 @@ def create_table_affiliate(con):
     cursorObj = con.cursor()
     cursorObj.execute("CREATE TABLE IF NOT EXISTS afiliados(id integer PRIMARY KEY,nombre text,apellidos text,direccion text,telefono real,email text, ciudad text,nacimiento text,afiliacion text,desafiliacion text,vacunado text)")
     con.commit()
-    
+#Y   
 def read_info_affiliate():  
     """Lee la informacion de un afiliado.
     
@@ -623,32 +623,8 @@ def image(lote,fabricante, fecha_vencimiento):
     ruta : la ruta en la que se guardo la imagen.
 
     """
+     
     
-    #Revisar
-    '''    
-    if(fabricante=='Sinovac'):
-        foto = 'fabrica/Sinovac.jpg'
-
-    if(fabricante=='Pfizer'):
-        foto = 'fabrica/Pfizer.jpg'
-
-    if(fabricante=='Moderna'):
-        foto = 'fabrica/Moderna.jpg'
-       
-
-    if(fabricante=='SputnikV'):
-        foto = 'fabrica/SputnikV.jpg'
-        
-
-    if(fabricante=='AstraZeneca'):
-        foto = 'fabrica/AstraZeneca.jpg'
-        
-    if(fabricante=='Sinopharm'):
-        foto = 'fabrica/Sinopharm.jpg'
-
-    if(fabricante=='Covaxim'):
-        foto = 'fabrica/Covaxim.jpg'
-    '''
     img = Image.new('RGB', (200, 150), "white")
         #crea una plantilla en blanco llamada img
     im = Image.open('fabrica/'+fabricante+'.jpg')
