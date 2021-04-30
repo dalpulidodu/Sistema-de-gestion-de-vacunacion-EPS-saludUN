@@ -163,6 +163,8 @@ def read_date(word):
 
 def image(lote,fabricante, fecha_vencimiento):
     """
+    ========================================
+    
     Funcion para crear e ingresar una imagen de acuerdo a numero de lote, el fabricante y la fecha de vencimiento
     
     utilizando la libreria pill, crea una imagen de acuerdo al fabricante, y le añade el numero de lote y fecha de vencimiento a la imagen
