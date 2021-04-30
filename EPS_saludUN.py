@@ -11,7 +11,9 @@ from PIL import Image, ImageDraw, ImageFont
 def sql_connection():
     """
     ==========================================
+    
     Funcion que crea/conecta la base de datos
+    
     """
     try:
         con = sqlite3.connect('db.db')
@@ -23,6 +25,8 @@ def sql_connection():
 
 def create_table_vaccine_lot(con):
     """
+    ========================================
+    
     Funcion que crea una tabla para los lotes de vacunas
     con los elementos:
     
@@ -47,7 +51,10 @@ def create_table_vaccine_lot(con):
 def read_info_vaccine_lot():
     
     """
-    Funcion que lee la informacion del lote y la retorna como una cadena de caracteres
+    =========================================
+    
+    Funcion que lee la informacion dada por el usuario y la retorna como una tupla
+    
     """
     correct_type = False
     while not correct_type:   
@@ -91,12 +98,29 @@ def read_info_vaccine_lot():
 
 
 def insert_vaccine_lot(con,x):
-    """ Funcion que se utiliza insertar en la base de datos"""
+    
+    """
+    ===================================
+    
+    Funcion que se utiliza insertar en la base de datos la tubla generada por:
+    read_info_vaccine_lot()
+    
+    """
     cursorObj = con.cursor()
     cursorObj.execute("INSERT INTO lote_Vacuna(lote, fabricante, tipo_vacuna, cantidad_recibida, cantidad_usada, dosis, temperatura, efectividad, tiempo_proteccion, fecha_vencimiento, imagen) VALUES (?,?,?,?,?,?,?,?,?,?,?)", x)
     con.commit()
 
 def sql_fetch_vaccine_lot(con):
+    
+    """
+    ==========================================
+    
+    Función que realiza un consulta en la base de datos teniendo en cuenta el numero de lote
+    
+    Muestra la imagen asociada a la fabricante con el numero de lote y su fecha de vencimiento.
+    
+    Imprime los elementos de la fila asociada al numero de lote
+    """
     cursorObj = con.cursor()
     num_lote=input("numero de lote a consultar: ")
     buscar='SELECT * FROM lote_Vacuna where lote='+num_lote
@@ -139,7 +163,11 @@ def read_date(word):
 
 def image(lote,fabricante, fecha_vencimiento):
     """
-    Funcion para crear e ingresar una imagen
+    Funcion para crear e ingresar una imagen de acuerdo a numero de lote, el fabricante y la fecha de vencimiento
+    
+    utilizando la libreria pill, crea una imagen de acuerdo al fabricante, y le añade el numero de lote y fecha de vencimiento a la imagen
+    
+    retorna la ruta en la que se guardo la imagen
     """
         
     if(fabricante=='Sinovac'):
@@ -153,7 +181,7 @@ def image(lote,fabricante, fecha_vencimiento):
        
 
     if(fabricante=='SputnikV'):
-        foto = 'fabrica/SputnikV.jpg', 'rb'
+        foto = 'fabrica/SputnikV.jpg'
         
 
     if(fabricante=='AstraZeneca'):
@@ -163,18 +191,26 @@ def image(lote,fabricante, fecha_vencimiento):
         foto = 'fabrica/Sinopharm.jpg'
 
     if(fabricante=='Covaxim'):
-        foto = 'fabrica/Covaxim.jpg', 'rb'
+        foto = 'fabrica/Covaxim.jpg'
 
     img = Image.new('RGB', (200, 150), "white")
+        #crea una plantilla en blanco llamada img
     im = Image.open('fabrica/'+fabricante+'.jpg')
+        #trae la imagen asociada al fabricante
     img.paste(im,(0,0))
+        #inserta la imganen en la plantilla
     fnt = ImageFont.truetype('fuente/Arial.ttf', 12)
+        #define la fuente del texto
     d=ImageDraw.Draw(img)
+        #nombra el metodo para escribir como d
     d.text((2, 100),'Fecha de vencimiento: '+str(fecha_vencimiento), font=fnt, fill=(0, 0, 0))
+        #escribe la fecha de vencimiento
     d.text((2, 125),'No.lote: ' +str(lote), font=fnt, fill=(0, 0, 0))
+        #escribe el numero de lote
     img.save('imagenes/'+str(lote)+'.jpg')
+        #guarda la imagen creada en la carpeta imagenes
     ruta='imagenes/'+str(lote)+'.jpg'
-       
+        #nombra la ruta donde se guardo la imagen creada  
     return ruta
                             
 
@@ -185,6 +221,11 @@ def image(lote,fabricante, fecha_vencimiento):
 '''
 
 def main():
+    
+    """
+    ==================
+    Funcion creada para dar inicio al programa
+    """
     
     con=sql_connection()
     #create_table_vaccine_lot(con)
