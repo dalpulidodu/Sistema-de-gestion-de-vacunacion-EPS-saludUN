@@ -10,7 +10,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 def sql_connection():
     """
-    Funcion que crea la base de datos
+    ==========================================
+    Funcion que crea/conecta la base de datos
     """
     try:
         con = sqlite3.connect('db.db')
@@ -23,6 +24,8 @@ def sql_connection():
 def create_table_vaccine_lot(con):
     """
     Funcion que crea una tabla para los lotes de vacunas
+    con los elementos:
+    
     (lote, fabricante, tipo de vacuna, cantidad recibida, cantidad usada, dosis, temperatura, efectividad, tiempo de proteccion, fecha de vencimiento, imagen)
              
     """
