@@ -5,7 +5,7 @@ import sqlite3
 from sqlite3 import Error
 
 from PIL import Image, ImageDraw, ImageFont
-
+#s
 ##########################################################################################################
 #                                             Data
 ##########################################################################################################
@@ -50,7 +50,7 @@ def create_table_affiliate(con):
     cursorObj = con.cursor()
     cursorObj.execute("CREATE TABLE IF NOT EXISTS afiliados(id integer PRIMARY KEY,nombre text,apellidos text,direccion text,telefono real,email text, ciudad text,nacimiento text,afiliacion text,desafiliacion text,vacunado text)")
     con.commit()
-    
+#Y   
 def read_info_affiliate():  
     """Lee la informacion de un afiliado.
     
@@ -602,7 +602,43 @@ def menu_calendar_vaccune():
     Programacion de citas de vacunacion
     
     ''')
+
+def menu_factory():
+    """
+    Imprime el menu de seleccion de fabricas
+
+    Returns
+    -------
+    None.
+
+    """
+    print('''  Fabricas:
+        1. Sinovak 
+        2. Pfizer 
+        3. Moderna 
+        4. Sputnik V 
+        5. AstraZeneca 
+        6. Sinopharm 
+        7. Covaxim 
     
+    ''')   
+    
+def menu_type_vaccumm():
+    """
+    Imprime el menu de seleccion de tipo de vacunas
+
+    Returns
+    -------
+    None.
+
+    """
+    print('''  Tipo de vacunas:
+        1. Vector viral
+        2. ARN/ADN
+        3. Virus desactivado
+        4. En base a proteínas
+    
+    ''')    
 ##########################################################################################################
 #                                        Bussisnes logic
 ##########################################################################################################
@@ -623,32 +659,8 @@ def image(lote,fabricante, fecha_vencimiento):
     ruta : la ruta en la que se guardo la imagen.
 
     """
+     
     
-    #Revisar
-    '''    
-    if(fabricante=='Sinovac'):
-        foto = 'fabrica/Sinovac.jpg'
-
-    if(fabricante=='Pfizer'):
-        foto = 'fabrica/Pfizer.jpg'
-
-    if(fabricante=='Moderna'):
-        foto = 'fabrica/Moderna.jpg'
-       
-
-    if(fabricante=='SputnikV'):
-        foto = 'fabrica/SputnikV.jpg'
-        
-
-    if(fabricante=='AstraZeneca'):
-        foto = 'fabrica/AstraZeneca.jpg'
-        
-    if(fabricante=='Sinopharm'):
-        foto = 'fabrica/Sinopharm.jpg'
-
-    if(fabricante=='Covaxim'):
-        foto = 'fabrica/Covaxim.jpg'
-    '''
     img = Image.new('RGB', (200, 150), "white")
         #crea una plantilla en blanco llamada img
     im = Image.open('fabrica/'+fabricante+'.jpg')
@@ -692,7 +704,10 @@ def read_date(word):
 
     Imprime un encabezado con el tipo de fecha que solicita, y pide al usuario 
     ingresar el dia, mes y año. Comprobando que se ingresen datos numericos. 
-    Retorna un string con el frmato de fecha  DD/MM/AAAA
+    Si word es 'es vacunacion' valida que las entradas de fechas sean mayores 
+    a la fecha en la que se hace la solicitud. De lo contrario obliga a que la 
+    fecha ingresadas sea menor que la fecha en la que se hace la solicitud.
+    Retorna un string con el formato de fecha  DD/MM/AAAA
     
     Parameters
     ----------
@@ -707,6 +722,7 @@ def read_date(word):
     date_aux: String fecha
 
     """
+    
     correct_date = False
     while not correct_date :
         print()
@@ -755,13 +771,18 @@ def read_date(word):
                   
         date_aux =ano+"-"+mes+"-"+dia
         
-   
-        if date_aux == '0000-00-00':
-            correct_date = True
-        elif date.fromisoformat(date_aux) > date.today():
-            print('Fecha fuera de rango, intentelo de nuevo.')
-        else:
-            correct_date = True
+        if (word =='de vencimiento'):
+            if date.fromisoformat(date_aux) < date.today():
+                print('Fecha fuera de rango, intentelo de nuevo.')
+            else:
+                correct_date = True
+        else:    
+            if date_aux == '0000-00-00':
+                correct_date = True
+            elif date.fromisoformat(date_aux) > date.today():
+                print('Fecha fuera de rango, intentelo de nuevo.')
+            else:
+                correct_date = True
             
     date_aux =dia+"/"+mes+"/"+ano          
     return date_aux
