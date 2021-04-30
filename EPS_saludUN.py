@@ -1,8 +1,8 @@
-from datetime import datetime
-from datetime import date
+
 import os
 import sqlite3
 from sqlite3 import Error
+from PIL import Image, ImageDraw, ImageFont
 
 ##########################################################################################################
 #                                             Data
@@ -19,449 +19,176 @@ def sql_connection():
     except Error:
         print('Se ha prodicido un error al crear la conexion',Error)
 
-def create_table_affiliate(con):
+
+def create_table_vaccine_lot(con):
     """
-    Funcion que crea una tabla con los parametros de un afiliado
-    (id,nombre, apellidos,direccion, telefono, email, ciudad, nacimiento,fecha de afiliacion, fecha de desafiliacion, vacunado)
+    Funcion que crea una tabla para los lotes de vacunas
+    (lote, fabricante, tipo de vacuna, cantidad recibida, cantidad usada, dosis, temperatura, efectividad, tiempo de proteccion, fecha de vencimiento, imagen)
              
     """
     cursorObj = con.cursor()
-    cursorObj.execute("CREATE TABLE IF NOT EXISTS afiliados(id integer PRIMARY KEY,nombre text,apellidos text,direccion text,telefono real,email text, ciudad text,nacimiento text,afiliacion text,desafiliacion text,vacunado text)")
+    cursorObj.execute("""CREATE TABLE IF NOT EXISTS lote_Vacuna(
+                      lote integer PRIMARY KEY,
+                      fabricante text,
+                      tipo_vacuna text,
+                      cantidad_recibida integer,
+                      cantidad_usada integer,
+                      dosis integer,
+                      temperatura integer,
+                      efectividad text,
+                      tiempo_proteccion integer,
+                      fecha_vencimiento text,
+                      imagen text)""")
     con.commit()
     
-def read_info_affiliate():
+def read_info_vaccine_lot():
     
     """
-    Funcion que lee la informacion de un afiliado y la retorna como una cadena de caracteres
+    Funcion que lee la informacion del lote y la retorna como una cadena de caracteres
     """
-    
     correct_type = False
     while not correct_type:   
         try:
-            i=int(input("numero de identificacion: "))
-            id = str(i)
-            id=id.ljust(12)
+            lote=(input("numero de lote: "))
             correct_type = True
         except:
             print('Entrada invalida, intentelo de nuevo')
     
-    nombre=(input("nombre: "))
-    nombre = nombre.ljust(20)
+    fabricante=(input("fabricante: "))
     
-    apellido=(input("apellido: "))
-    apellido = apellido.ljust(20)
+    tipo_vacuna=(input("tipo de vacuna: "))
+    tipo_vacuna = tipo_vacuna.ljust(21)
     
-    direccion=(input("direccion: "))
-    direccion = direccion.ljust(20)
+    cantidad_recibida=(input("cantidad recibida: "))
+    cantidad_recibida = cantidad_recibida.ljust(6)
     
-    correct_type = False
-    while not correct_type:   
-        try:
-            t=int(input("telefono: "))
-            telefono=str(t)
-            telefono = telefono.ljust(12)
-            correct_type = True
-        except:
-            print('Entrada invalida, intentelo de nuevo')
+    cantidad_usada=(input("cantidad usada: "))
+    cantidad_usada = cantidad_usada.ljust(6)
+
+    dosis=(input("dosis necesaria: "))
+    dosis = dosis.ljust(1)
+    
+    temperatura=(input("temperatura: "))
+    temperatura = temperatura.ljust(3)
+
+    efectividad=(input("efectividad: "))
+    efectividad = efectividad.ljust(3)
+    efectividad = (str(efectividad))+"%"
         
-    email=(input("email: "))
-    email = email.ljust(20)
-    
-    ciudad=(input("ciudad: "))
-    ciudad = ciudad.ljust(20)    
-    
-       
-    nacimiento = read_date('nacimiento')
+    tiempo_proteccion=(input("tiempo de proteccion: "))
+    tiempo_proteccion = tiempo_proteccion.ljust(3)
 
-    afiliacion = read_date('afiliacion')
-    
-    desafiliacion = '00/00/0000'        
-    
-    vacunado='no'
-        
-            
-    afiliado=(id ,nombre,apellido ,direccion,telefono ,email, ciudad ,nacimiento,afiliacion,desafiliacion,vacunado )
-    return afiliado
+    fecha_vencimiento=read_date('de vencimiento')
 
-def insert_affiliate(con,afiliado):
-    """ Funcion que se utiliza para operar en la base de datos"""
+    imagen=image(lote,fabricante, fecha_vencimiento)
+    
+    lote_in=(lote, fabricante, tipo_vacuna, cantidad_recibida, cantidad_usada, dosis, temperatura, efectividad, tiempo_proteccion, fecha_vencimiento, imagen)
+    return lote_in
+
+
+
+def insert_vaccine_lot(con,x):
+    """ Funcion que se utiliza insertar en la base de datos"""
     cursorObj = con.cursor()
-    cursorObj.execute('''INSERT INTO afiliados (id ,nombre,apellidos ,direccion,telefono ,email, ciudad ,nacimiento,afiliacion,desafiliacion,vacunado) VALUES(?, ?, ?, ?,?,?,?, ?, ?, ?,?)''',afiliado)
+    cursorObj.execute("INSERT INTO lote_Vacuna(lote, fabricante, tipo_vacuna, cantidad_recibida, cantidad_usada, dosis, temperatura, efectividad, tiempo_proteccion, fecha_vencimiento, imagen) VALUES (?,?,?,?,?,?,?,?,?,?,?)", x)
     con.commit()
 
-def update_affiliate_vaccine(con):
-    """ Funcion que se utiliza para operar en la base de datos"""
+def sql_fetch_vaccine_lot(con):
     cursorObj = con.cursor()
-    vacunado=input("identificacion del afiliado vacunado: ")
-    actualizar='update afiliados SET vacunado = "si" where id ='+vacunado
-    cursorObj.execute(actualizar)
-    con.commit()
-    
-def update_disaffiliated(con):
-    """ Funcion que se utiliza para operar en la base de datos"""
-    cursorObj = con.cursor()
-    desafiliado=input("identificacion del afiliado a desafiliar: ")
-    fecha = date_to_string(date.today())  
-    print(fecha)      
-    actualizar='update afiliados SET desafiliacion = "'+fecha+'" where id ='+desafiliado
-    cursorObj.execute(actualizar)
-    con.commit()
-
-def sql_fetch_affiliate(con):    
-    cursorObj = con.cursor()
-    afiliad=input("id del afiliado a consultar: ")
-    buscar='SELECT * FROM afiliados where id= '+afiliad
+    num_lote=input("numero de lote a consultar: ")
+    buscar='SELECT * FROM lote_Vacuna where lote='+num_lote
     cursorObj.execute(buscar)
     filas = cursorObj.fetchall()
-    print()
-    header=('id: ', 'Nombre: ','Apellidos: ', 'Direccion: ','Telefono:', 'Email: ','Ciudad: ','Nacimiento: ', 'Fecha de afiliacion: ', 'Fecha de desafiliacion: ', 'Vacunado: ')
     for row in filas:
-        for i in range(11):            
-            print(header[i]+''+str(row[i]))
+        img = Image.open(row[10])
+        img.show()       
+        print(row[0:10])
+        print('ruta de imagen: ' +row[10])
     con.commit()
-    print()
-    
+
 def close_db(con):
-    con.close()    
+    con.close()
 
 
-##########################################################################################################
-#                                        Presentation
-##########################################################################################################
 
-def clear_screen():
-    '''
-    Limpia la consola
-    '''
-    if os.name == "posix":
-        os.system ("clear")
-    elif os.name == "ce" or os.name == "nt" or os.name == "dos":
-        os.system ("cls")
 
-def menu():
-    clear_screen()
-    print(
-    '''#############################################################################################
-                           Sistema de gestion de vacunacion EPS saludUN   
-#############################################################################################
-                                  
-                                       Menu principal
-    
-    Seleccione una opcion:
-    1. Gestion de afiliados
-    2. Gestion lotes de vacunas
-    3. Gestion Plan de vacunacion
-    4. Agenda de vacunacion
-    e. Salir
-    
-    ''')
-
-def menu_affiliate():
-    clear_screen()
-    print('''#############################################################################################
-                                     Afiliados  
-#############################################################################################
-    
-    Seleccione una opcion:
-    1. Ingresar nuevo afiliado
-    2. Actualizar estado de afiliado
-    3. Consultar afiliado
-    b. Volver al menu anterior
-    e. Salir
-    
-    ''')
-    
-def menu_new_affiliate():
-     clear_screen()
-     print('''#############################################################################################
-                                     Nuevo Afiliado  
-#############################################################################################
-    Ingrese los datos del nuevo afiliado:
-    
-    
-    ''')
-    
-def menu_state_affiliate():
-     clear_screen()
-     print('''#############################################################################################
-                                     Estado del Afiliado  
-#############################################################################################
-    
-    1. Vacunacion
-    2. Desafiliacion
-    b. Volver
-    e. Salir
-    
-    
-    ''')
-    
-def menu_info_affiliate():
-    clear_screen()
-    print('''#############################################################################################
-                                     Consulta Afiliado  
-#############################################################################################
-    Ingrese el numero de identificacion del afiliado para ver su informacion:
-    
-    
-    ''')
-
-def menu_vaccine():
-    clear_screen()
-    print('''#############################################################################################
-                                     Gestion lotes de vacunas 
-#############################################################################################
-    
-    Seleccione una opcion:
-    1. Ingresar nuevo lote de vacunacion
-    2. Consultar lote de vacunacion
-    b. Volver al menu anterior
-    e. Salir
-    
-    ''')
-    
-def menu_new_vaccine():
-    clear_screen()
-    print('''#############################################################################################
-                                     Nuevo lote de vacunas 
-#############################################################################################
-    
-    Ingrese el nuevo lote de vacunacion:
-    
-    ''')
-    
-def menu_info_vaccine():
-    clear_screen()
-    print('''#############################################################################################
-                                     Consultar lote de vacunas 
-#############################################################################################
-    
-    Ingrese el numero de lote de vacunacion a consultar:
-    
-    ''')    
-    
-def menu_plan_vaccine():
-    clear_screen()
-    print('''#############################################################################################
-                                     Gestion plan de vacunacion 
-#############################################################################################
-    
-    Seleccione una opcion:
-    1. Crear plan de vacunacion
-    2. Consultar plan de vacunacion
-    b. Volver al menu anterior
-    e. Salir
-    
-    ''')    
-
-def menu_new_plan_vaccine():
-    clear_screen()
-    print('''#############################################################################################
-                                     Nuevo Plan de vacunas 
-#############################################################################################
-    
-    Ingrese el nuevo lote de vacunacion:
-    
-    ''')
-    
-def menu_info_plan_vaccine():
-    clear_screen()
-    print('''#############################################################################################
-                                     Consultar Plan de vacunas 
-#############################################################################################
-    
-    Ingrese el numero de plan de vacunacion a consultar:
-    
-    ''')  
-
-def menu_calendar_vaccune():
-    print('''#############################################################################################
-                                     Calendario de vacunacion
-#############################################################################################
-    
-    Programacion de citas de vacunacion
-    
-    ''')
-    
 ##########################################################################################################
 #                                        Bussisnes logic
 ##########################################################################################################
-def date_to_string(date):
-    
-    f = date.isoformat().split('-')
-    return str(f[2])+'/'+str(f[1])+'/'+str(f[0])
-
 def read_date(word):
     """
-    Funcion que lee una fecha infresada por el usuario y la convierte a formato de texto DD/MM/AAAA
+    Funcion que lee una fecha infresada por el usuario y la convierte a formato de texto con el formato ISO 8601
+    AAAA/MM/DD
     """
-    correct_date = False
-    while not correct_date :
-        print()
-        print(word)
-        
-        correct_type = False
-        while not correct_type:   
-            try:
-                d=int(input("dia "+word+": "))
-                if(d>=0 and d<=31):
-                    dia= str(d)
-                    dia = dia.rjust(2,"0")
-                    correct_type = True
-                else:                    
-                    raise 
-            except:
-                print('Entrada invalida, intentelo de nuevo')
-                    
-        correct_type = False        
-        while not correct_type:   
-            try:
-                m=int(input("mes "+word+": "))
-                if(m>=0 and m<=12):
-                    mes = str(m)
-                    mes= mes.rjust(2,"0")
-                    correct_type = True
-                else:
-                    raise
-            except:
-                print('Entrada invalida, intentelo de nuevo')
-           
-        
-        correct_type = False        
-        while not correct_type:   
-            try:
-                
-                a=int(input("ano "+word+": "))
-                if(a>=0):
-                    ano = str(a)
-                    ano= ano.rjust(4,"0")
-                    correct_type = True
-                else:
-                    raise ValueError
-            except:
-                print('Entrada invalida, intentelo de nuevo')         
-                  
-        date_aux =ano+"-"+mes+"-"+dia
-        
-   
-        if date_aux == '0000-00-00':
-            correct_date = True
-        elif date.fromisoformat(date_aux) > date.today():
-            print('Fecha fuera de rango, intentelo de nuevo.')
-        else:
-            correct_date = True
-                 
-    return dia+"/"+mes+"/"+ano
+    dia=(input("dia "+word+": "))
+    dia = dia.rjust(2,"0")
     
-def main():    
+    mes = (input("mes "+word+": "))
+    mes= mes.rjust(2,"0")
+    
+    ano = (input("año "+word+": "))
+    ano= ano.rjust(4)
+    
+    date=dia+"/"+mes+"/"+ano
+    print(word,date)
+    
+    return date
+
+def image(lote,fabricante, fecha_vencimiento):
+    """
+    Funcion para crear e ingresar una imagen
+    """
+        
+    if(fabricante=='Sinovac'):
+        foto = 'fabrica/Sinovac.jpg'
+
+    if(fabricante=='Pfizer'):
+        foto = 'fabrica/Pfizer.jpg'
+
+    if(fabricante=='Moderna'):
+        foto = 'fabrica/Moderna.jpg'
+       
+
+    if(fabricante=='SputnikV'):
+        foto = 'fabrica/SputnikV.jpg', 'rb'
+        
+
+    if(fabricante=='AstraZeneca'):
+        foto = 'fabrica/AstraZeneca.jpg'
+        
+    if(fabricante=='Sinopharm'):
+        foto = 'fabrica/Sinopharm.jpg'
+
+    if(fabricante=='Covaxim'):
+        foto = 'fabrica/Covaxim.jpg', 'rb'
+
+    img = Image.new('RGB', (200, 150), "white")
+    im = Image.open('fabrica/'+fabricante+'.jpg')
+    img.paste(im,(0,0))
+    fnt = ImageFont.truetype('fuente/Arial.ttf', 12)
+    d=ImageDraw.Draw(img)
+    d.text((2, 100),'Fecha de vencimiento: '+str(fecha_vencimiento), font=fnt, fill=(0, 0, 0))
+    d.text((2, 125),'No.lote: ' +str(lote), font=fnt, fill=(0, 0, 0))
+    img.save('imagenes/'+str(lote)+'.jpg')
+    ruta='imagenes/'+str(lote)+'.jpg'
+       
+    return ruta
+                            
+
+'''
+=========================================================================================================
+                                      Inicializacion      
+=========================================================================================================
+'''
+
+def main():
     
     con=sql_connection()
-    create_table_affiliate(con)
+    #create_table_vaccine_lot(con)
+    #x=read_info_vaccine_lot()
     
-    
-    salir=False
-    while not salir:
-                    
-        menu()
-        option = input('Ingrese una opcion: ')
-            
-        if(option == '1'): # menu afiliado
-              
-            back = False
-            while not back:              
-                
-                menu_affiliate()  
-                option = input('Ingrese una opcion: ')
-                    
-                if(option == '1'):  # ingresar nuevo afiliado
-                    menu_new_affiliate()                  
-                    afiliado=read_info_affiliate()
-                    insert_affiliate(con,afiliado)
-                    input('Nuevo afiliado registrado. Presione cualquier tecla para continuar...')
-                    
-                elif(option == '2'): # Actualizar estado de afiliado
-                    
-                    back = False
-                    while not back:
-                        menu_state_affiliate()
-                        option = input('Ingrese una opcion: ')
-                        if(option=='1'): #Vacunacion
-                            update_affiliate_vaccine(con)
-                            input('Presione cualquier tecla para continuar...')
-                        elif(option == '2'): #Desafiliacion
-                            update_disaffiliated(con)
-                            input('Presione cualquier tecla para continuar...')
-                        elif(option == 'b' or option == 'B'): # Volver al menu anterior
-                            back = True
-                        elif(option == 'e' or option == 'E'): # Salir del programa
-                            back = True
-                            salir = True
-                        else:
-                            print('Opcion no valida')
-                
-                    
-                elif(option == '3'): # Consultar afiliado
-                    menu_info_affiliate()
-                    sql_fetch_affiliate(con)
-                    input('Presione cualquier tecla para continuar...')
-                    
-                elif(option == 'b' or option == 'B'): # Volver al menu anterior
-                    back = True
-                elif(option == 'e' or option == 'E'): # Salir del programa
-                    back = True
-                    salir = True
-                else:
-                    print('Opcion no valida')
-                    
-        elif(option == '2'):#menu gestion lotes de vacunas
-            back = False
-            while not back:
-                menu_vaccine()
-                option = input('Ingrese una opcion: ')
-                if(option=='1'): #crear lote Vacunacion
-                    menu_new_vaccine()
-                    #
-                    input('Presione cualquier tecla para continuar...')
-                elif(option == '2'): #consultar lote vacunacion
-                    menu_info_vaccine()
-                    #
-                    input('Presione cualquier tecla para continuar...')
-                elif(option == 'b' or option == 'B'): # Volver al menu anterior
-                    back = True
-                elif(option == 'e' or option == 'E'): # Salir del programa
-                    back = True
-                    salir = True
-                else:
-                    print('Opcion no valida')
-                    
-        elif(option == '3'):#menu gestion plan de vacunacion 
-            back = False
-            while not back:
-                menu_plan_vaccine()
-                option = input('Ingrese una opcion: ')
-                if(option=='1'): #crear plan de Vacunacion
-                    menu_new_plan_vaccine()
-                    #
-                    input('Presione cualquier tecla para continuar...')
-                    
-                elif(option == '2'): #consultar plan de vacunacion
-                    menu_info_plan_vaccine()
-                    #
-                    input('Presione cualquier tecla para continuar...')
-                elif(option == 'b' or option == 'B'): # Volver al menu anterior
-                    back = True
-                elif(option == 'e' or option == 'E'): # Salir del programa
-                    back = True
-                    salir = True
-                else:
-                    print('Opcion no valida')
-                    
-        elif(option == '4'): #♦menu agenda de vacunacion
-            menu_calendar_vaccune()            
-        elif(option == 'e' or option == 'E'):
-            salir = True
-        else:    
-            print('Opcion no valida')
-    
+    #insert_vaccine_lot(con,x)
+    sql_fetch_vaccine_lot(con)
     close_db(con)
-    
+
 main()
