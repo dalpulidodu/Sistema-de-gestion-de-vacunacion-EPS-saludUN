@@ -5,7 +5,7 @@ import sqlite3
 from sqlite3 import Error
 
 from PIL import Image, ImageDraw, ImageFont
-#s
+
 ##########################################################################################################
 #                                             Data
 ##########################################################################################################
@@ -50,7 +50,7 @@ def create_table_affiliate(con):
     cursorObj = con.cursor()
     cursorObj.execute("CREATE TABLE IF NOT EXISTS afiliados(id integer PRIMARY KEY,nombre text,apellidos text,direccion text,telefono real,email text, ciudad text,nacimiento text,afiliacion text,desafiliacion text,vacunado text)")
     con.commit()
-#Y   
+ 
 def read_info_affiliate():  
     """Lee la informacion de un afiliado.
     
@@ -327,7 +327,24 @@ def sql_fetch_vaccine_lot(con):
         img = Image.open(row[10])
         img.show()
     con.commit()    
-    
+
+def create_table_calendar(con):
+    """
+    Crea una tabla para el calendario de vacunacion
+
+    Parameters
+    ----------
+    con :Conexion bas de datos SQL
+
+    Returns
+    -------
+    None.
+
+    """
+    cursorObj = con.cursor()
+    cursorObj.execute("CREATE TABLE IF NOT EXISTS calendar(id integer PRIMARY KEY,cuidadvacunacion text,nolote integer,fechaprogramada text,horaprogamada text,nombre text, apellido text,direccion text,telefono integer,correo text,fabricante text)")
+    con.commit()
+
 def close_db(con):
     """Cierra la conexion a la base de datos
     
@@ -344,6 +361,8 @@ def close_db(con):
     con.close()    
 
 
+    
+    
 ##########################################################################################################
 #                                        Presentation
 ##########################################################################################################
@@ -544,7 +563,7 @@ def menu_plan_vaccine():
     
     Seleccione una opcion:
     1. Crear plan de vacunacion
-    2. Consultar plan de vacunacion
+    2. Consulta del plan de vacunacion
     b. Volver al menu anterior
     e. Salir
     
@@ -600,8 +619,70 @@ def menu_calendar_vaccune():
 #############################################################################################
     
     Programacion de citas de vacunacion
+    1. Consulta general calendario de vacunacion
+    2. Consulta individual calendario de vacunacion
+    3. Crear calendario de vacunacion
+    b. Volver al menu anterior
+    e. Salir
     
     ''')
+    
+def menu_calendar_vaccune_general():
+    """
+    Imprime el menu de Consulta general calendario de vacunacion
+
+    Returns
+    -------
+    None.
+
+    """
+    print('''#############################################################################################
+                                     Consulta general calendario de vacunacion
+#############################################################################################
+    
+    Ordenar calendario por
+    
+    1. Nombre de afiliado
+    2. Apellido de afiliado
+    3. Id afiliado
+    4. Vacuna a aplicar
+    5. Fecha-Hora cita
+    
+    
+    ''')    
+    
+def menu_calendar_vaccune_individual():
+    """
+    Imprime el menu de Consulta individual calendario de vacunacion
+
+    Returns
+    -------
+    None.
+
+    """
+    print('''#############################################################################################
+                                     Consulta individual calendario de vacunacion
+#############################################################################################
+    
+    Consulta por Id de afiliado el calendario de vacunacion
+    ''')   
+    
+def menu_mew_calendar_vaccune():
+    """
+    Imprime el menu de Crear nuevo calendario de vacunacion
+
+    Returns
+    -------
+    None.
+
+    """
+    print('''#############################################################################################
+                                     Crear nuevo calendario de vacunacion
+#############################################################################################
+    
+     El sistema creara por pedido del operador la programación de vacunas a partir 
+     de la fecha de inicio indicada, en el horario de atención indicado
+    ''')       
 
 def menu_factory():
     """
@@ -793,6 +874,8 @@ def main():
     con=sql_connection()
     create_table_affiliate(con)
     create_table_vaccine_lot(con)
+    create_table_calendar(con)
+    
     
     salir=False
     while not salir:
@@ -892,8 +975,31 @@ def main():
                 else:
                     print('Opcion no valida')
                     
-        elif(option == '4'): #♦menu agenda de vacunacion
-            menu_calendar_vaccune()            
+        elif(option == '4'): #menu agenda de vacunacion
+                        
+            back = False
+            while not back:
+                menu_calendar_vaccune()
+                option = input('Ingrese una opcion: ')
+                if(option=='1'): #consulta general calendario
+                    
+                    menu_calendar_vaccune_general()
+                    input('Presione cualquier tecla para continuar...')
+                    
+                elif(option == '2'): #consulta individual calendario                    
+                    menu_calendar_vaccune_individual()
+                    input('Presione cualquier tecla para continuar...')
+                elif(option == '3'): #crear calendario                    
+                    menu_mew_calendar_vaccune()
+                    input('Presione cualquier tecla para continuar...')    
+                elif(option == 'b' or option == 'B'): # Volver al menu anterior
+                    back = True
+                elif(option == 'e' or option == 'E'): # Salir del programa
+                    back = True
+                    salir = True
+                else:
+                    print('Opcion no valida')            
+                        
         elif(option == 'e' or option == 'E'):
             salir = True
         else:    
