@@ -235,46 +235,91 @@ def read_info_vaccine_lot():
     """Lee la informacion del lote de vacunas
     
     Recibe los datos dados por el usuario y los retorna como una tupla
-
     Returns
     -------
     lote_in : tuple
-
     """
+
+    #lote
     correct_type = False
     while not correct_type:   
         try:
-            lote=(input("numero de lote: "))
+            i=int(input("numero de lote: "))
+            lote=str(i)
+            lote=lote.ljust(12, '0')
             correct_type = True
         except:
-            print('Entrada invalida, intentelo de nuevo')
-    
-    fabricante=(input("fabricante: "))
-    
-    tipo_vacuna=(input("tipo de vacuna: "))
-    tipo_vacuna = tipo_vacuna.ljust(21)
-    
-    cantidad_recibida=(input("cantidad recibida: "))
-    cantidad_recibida = cantidad_recibida.ljust(6)
-    
-    cantidad_usada=(input("cantidad usada: "))
-    cantidad_usada = cantidad_usada.ljust(6)
+            print('Entrada invalida, por favor digite solo numeros enteros')
 
-    dosis=(input("dosis necesaria: "))
-    dosis = dosis.ljust(1)
-    
-    temperatura=(input("temperatura: "))
-    temperatura = temperatura.ljust(3)
+    #fabricante
+    lista= {'1':'Sinovac', '2':'Pfizer', '3':'Moderna', '4':'SputnikV', '5':'AstraZeneca', '6':'Sinopharm', '7':'Covaxim'}
+    correct_type = False
+    while not correct_type:
+        option = input("Ingrese el numero correspondiente: ")
+        if option in lista:
+            fabricante = lista[option]
+            correct_type = True
+        else: 
+            print("Opción no valida, por favor ingrese un valor valido")
+            
+    #tipo de vacuna     
+    lista= {'Sinovac':'Virus desactivado', 'Pfizer':'ARN/ADN', 'Moderna':'ARN/ADN', 'SputnikV':'Vector viral', 'AstraZeneca':'Vector viral','Sinopharm':'Virus desactivado','Covaxim':'Virus desactivado'}
+    option = fabricante
+    tipo_vacuna = lista[option]
 
-    efectividad=(input("efectividad: "))
-    efectividad = efectividad.ljust(3)
-    efectividad = (str(efectividad))+"%"
-        
-    tiempo_proteccion=(input("tiempo de proteccion: "))
-    tiempo_proteccion = tiempo_proteccion.ljust(3)
 
+    #cantidad recibida
+    correct_type = False
+    while not correct_type:   
+        try:
+            i=int(input("Cantidad recibida: "))
+            cantidad_recibida=str(i)
+            cantidad_recibida=cantidad_recibida.ljust(6)
+            correct_type = True
+        except:
+            print('Entrada invalida, por favor digite solo numeros enteros')
+
+    #cantidad usada - revisar
+    correct_type = False
+    while not correct_type:   
+        try:
+            i=int(input("Cantidad usada: "))
+            cantidad_usada=str(i)
+            cantidad_usada=cantidad_usada.ljust(6)
+            correct_type = True
+        except:
+            print('Entrada invalida, por favor digite solo numeros enteros')
+                
+    #dosis necesaria ---- todas son 2, en intervalos diferentes
+    lista= {'Sinovac':' en 21 dias', 'Pfizer':' en 21 dias', 'Moderna':' en 28 dias', 'SputnikV':' en 21 dias', 'AstraZeneca':'Vector viral','Sinopharm':'Virus desactivado','Covaxim':'Virus desactivado'}
+    option = fabricante
+    dosis = '2'+lista[option]
+                
+    #temperatura
+    lista= {'Sinovac':'8°C', 'Pfizer':'8°C', 'Moderna':'-25°C', 'SputnikV':'-18°C', 'AstraZeneca':'8°C', 'Sinopharm':'8°C', 'Covaxim':'40°C'}
+    option = fabricante
+    temperatura = lista[option]
+
+    #efectividad
+    lista= {'Sinovac':'50.38%', 'Pfizer':'95%', 'Moderna':'95%', 'SputnikV':'91%', 'AstraZeneca':'76%', 'Sinopharm':'79%', 'Covaxim':'81%'}
+    option = fabricante
+    efectividad = lista[option]
+
+    #tiempo de proteccion
+    correct_type = False
+    while not correct_type:   
+        try:
+            i=int(input("Tiempo de proteccion en meses: "))
+            tiempo_proteccion=str(i)
+            tiempo_proteccion=tiempo_proteccion.ljust(2)+' meses'
+            correct_type = True
+        except:
+            print('Entrada invalida, por favor digite solo numeros enteros')
+            
+    #fecha de vencimiento
     fecha_vencimiento=read_date('de vencimiento')
-
+    
+    #ruta de la imagen
     imagen=image(lote,fabricante, fecha_vencimiento)
     
     lote_in=(lote, fabricante, tipo_vacuna, cantidad_recibida, cantidad_usada, dosis, temperatura, efectividad, tiempo_proteccion, fecha_vencimiento, imagen)
@@ -287,11 +332,9 @@ def insert_vaccine_lot(con,vaccine):
     ----------
     con : Conexion a la base de datos SQL    
     vaccine : Tupla con la informacion del lote de vacunacion
-
     Returns
     -------
     None.
-
     """
     cursorObj = con.cursor()
     cursorObj.execute("INSERT INTO lote_Vacuna(lote, fabricante, tipo_vacuna, cantidad_recibida, cantidad_usada, dosis, temperatura, efectividad, tiempo_proteccion, fecha_vencimiento, imagen) VALUES (?,?,?,?,?,?,?,?,?,?,?)", vaccine)
@@ -306,11 +349,9 @@ def sql_fetch_vaccine_lot(con):
     Parameters
     ----------
     con : conexion a la base de datos SQL.
-
     Returns
     -------
     None.
-
     """
     
     cursorObj = con.cursor()
@@ -318,16 +359,14 @@ def sql_fetch_vaccine_lot(con):
     buscar='SELECT * FROM lote_Vacuna where lote='+num_lote
     cursorObj.execute(buscar)
     filas = cursorObj.fetchall()
-    
+    header=('Numero de lote: ', 'Fabricante: ','Tipo de vacuna: ', 'Cantidad recibida: ','Cantidad usada: ', 'Dosis: ','Temperatura: ','Efectividad: ', 'Tiempo de protección: ', 'Fecha de vencimiento: ',  'Imagen: ')
     for row in filas:
-               
-        print(row[0:10])
-        print('ruta de imagen: ' +row[10])
-        
+        for i in range(11):            
+            print(header[i]+''+str(row[i]))
         img = Image.open(row[10])
         img.show()
-    con.commit()    
-
+    con.commit()
+    
 def create_table_calendar(con):
     """
     Crea una tabla para el calendario de vacunacion
