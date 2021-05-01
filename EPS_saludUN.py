@@ -360,7 +360,110 @@ def close_db(con):
     """
     con.close()    
 
+def create_table_plan_vaccine(con): 
+    """Funcion que crea una tabla para los planes de vacunación
+    
+    Crea una tabla  con los siguentes encabezados:
+    (id_plan, edad_min, edad_max, fecha_inicio, fecha_final)
+    
+    Parameters
+    ----------
+    con : Conexion a la base de datos SQL
+    Returns
+    -------
+    None.
+    """
+    cursorObj = con.cursor()
+    cursorObj.execute(
+        "CREATE TABLE IF NOT EXISTS planes (idplan integer PRIMARY KEY,edad_min text, edad_max test, fecha_inicio text, fecha_final text)")
+    con.commit()
 
+def insert_plan_vaccine(con, entities): 
+    """ Inserta los datos de un plan de vacunación a la base de datos    
+    Parameters
+    ----------
+    con : Conexion con la base de datos SQL
+    planes : Tupla con la informacion del plan de vacunación
+    Returns
+    -------
+    None.
+    """
+    cursorObj = con.cursor()
+    cursorObj.execute(
+        'INSERT INTO planes(idplan, edad_min, edad_max, fecha_inicio, fecha_final) VALUES(?, ?, ?, ?, ?)',
+        entities)
+    con.commit()
+
+def read_info_plan():  
+    """Lee la informacion de un plan de vacunación.
+    
+    Retorna una tupla con los datos del plan de vacunación. 
+      
+    Returns
+    -------
+    planes : tuple
+    """    
+    
+    correct_type = False
+    while not correct_type:   
+        try:
+            i=int(input("numero de identificacion: "))
+            idplan = str(i)
+            idplan = idplan.ljust(3)
+            correct_type = True
+        except:
+            print('Entrada invalida, intentelo de nuevo')
+    
+    correct_type2 = False
+    while not correct_type2:   
+        try:
+            i=int(input("edad mínima: "))
+            edad_min = str(i)
+            edad_min = edad_min.ljust(3)
+            correct_type2 = True
+        except:
+            print('Entrada invalida, intentelo de nuevo')
+    
+    correct_type3 = False
+    while not correct_type3:   
+        try:
+            i=int(input("edad máxima: "))
+            edad_max = str(i)
+            edad_max = edad_min.ljust(3)
+            correct_type3 = True
+        except:
+            print('Entrada invalida, intentelo de nuevo')
+    fecha_inicio = read_date('fecha de inicio')
+
+    fecha_final = read_date('fecha final')      
+            
+    planes=(idplan,edad_min,edad_max,fecha_inicio,fecha_final)
+    return planes
+
+def sql_fetch_plan(con): 
+    """Consulta la informacion de un plan de acuerdo a su id.
+    
+    Solicita el id del afiliado, e imprime la informacion asociada a ese planes.
+    
+    Parameters
+    ----------
+    con : conexion a la base de datos SQL
+    Returns
+    -------
+    None.
+    """
+    cursorObj = con.cursor()
+    plan=input("id del plan a consultar: ")
+    buscar='SELECT * FROM planes where idplan= '+plan
+    cursorObj.execute(buscar)
+    filas = cursorObj.fetchall()
+    print()
+    header=('idplan: ', 'edad_min: ','edad_max: ', 'fecha_inicio: ','fecha_final:')
+    for row in filas:
+        for i in range(5):            
+            print(header[i]+''+str(row[i]))
+    con.commit()
+    print()
     
     
 ##########################################################################################################
@@ -852,9 +955,9 @@ def read_date(word):
                   
         date_aux =ano+"-"+mes+"-"+dia
         
-        if (word =='de vencimiento'):
+        if (word =='de vencimiento' or word =='fecha de inicio' or word =='fecha final'):
             if date.fromisoformat(date_aux) < date.today():
-                print('Fecha fuera de rango, intentelo de nuevo.')
+                print('La fecha ingresada es anterior a la fecha actual, intentelo de nuevo.')
             else:
                 correct_date = True
         else:    
@@ -874,6 +977,7 @@ def main():
     con=sql_connection()
     create_table_affiliate(con)
     create_table_vaccine_lot(con)
+    create_table_plan_vaccine(con)
     create_table_calendar(con)
     
     
@@ -960,12 +1064,13 @@ def main():
                 option = input('Ingrese una opcion: ')
                 if(option=='1'): #crear plan de Vacunacion
                     menu_new_plan_vaccine()
-                    #
+                    plan = read_info_plan()
+                    insert_plan_vaccine(con, plan)
                     input('Presione cualquier tecla para continuar...')
                     
                 elif(option == '2'): #consultar plan de vacunacion
                     menu_info_plan_vaccine()
-                    #
+                    sql_fetch_plan(con)
                     input('Presione cualquier tecla para continuar...')
                 elif(option == 'b' or option == 'B'): # Volver al menu anterior
                     back = True
