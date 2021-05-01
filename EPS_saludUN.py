@@ -246,7 +246,7 @@ def read_info_vaccine_lot():
         try:
             i=int(input("numero de lote: "))
             lote=str(i)
-            lote=lote.ljust(12, '0')
+            lote=lote.rjust(12, '0')
             correct_type = True
         except:
             print('Entrada invalida, por favor digite solo numeros enteros')
@@ -255,6 +255,7 @@ def read_info_vaccine_lot():
     lista= {'1':'Sinovac', '2':'Pfizer', '3':'Moderna', '4':'SputnikV', '5':'AstraZeneca', '6':'Sinopharm', '7':'Covaxim'}
     correct_type = False
     while not correct_type:
+        menu_factory()
         option = input("Ingrese el numero correspondiente: ")
         if option in lista:
             fabricante = lista[option]
@@ -317,7 +318,7 @@ def read_info_vaccine_lot():
             print('Entrada invalida, por favor digite solo numeros enteros')
             
     #fecha de vencimiento
-    fecha_vencimiento=read_date('de vencimiento')
+    fecha_vencimiento=read_date('fecha de vencimiento')
     
     #ruta de la imagen
     imagen=image(lote,fabricante, fecha_vencimiento)
@@ -846,22 +847,7 @@ def menu_factory():
     
     ''')   
     
-def menu_type_vaccumm():
-    """
-    Imprime el menu de seleccion de tipo de vacunas
-
-    Returns
-    -------
-    None.
-
-    """
-    print('''  Tipo de vacunas:
-        1. Vector viral
-        2. ARN/ADN
-        3. Virus desactivado
-        4. En base a proteínas
-    
-    ''')    
+  
 ##########################################################################################################
 #                                        Bussisnes logic
 ##########################################################################################################
@@ -994,7 +980,7 @@ def read_date(word):
                   
         date_aux =ano+"-"+mes+"-"+dia
         
-        if (word =='de vencimiento' or word =='fecha de inicio' or word =='fecha final'):
+        if (word =='fecha de vencimiento' or word =='fecha de inicio' or word =='fecha final'):
             if date.fromisoformat(date_aux) < date.today():
                 print('La fecha ingresada es anterior a la fecha actual, intentelo de nuevo.')
             else:
