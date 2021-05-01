@@ -368,22 +368,7 @@ def sql_fetch_vaccine_lot(con):
         img.show()
     con.commit()
     
-def create_table_calendar(con):
-    """
-    Crea una tabla para el calendario de vacunacion
 
-    Parameters
-    ----------
-    con :Conexion bas de datos SQL
-
-    Returns
-    -------
-    None.
-
-    """
-    cursorObj = con.cursor()
-    cursorObj.execute("CREATE TABLE IF NOT EXISTS calendar(id integer PRIMARY KEY,cuidadvacunacion text,nolote integer,fechaprogramada text,horaprogamada text,nombre text, apellido text,direccion text,telefono integer,correo text,fabricante text)")
-    con.commit()
 
 def close_db(con):
     """Cierra la conexion a la base de datos
@@ -415,7 +400,7 @@ def create_table_plan_vaccine(con):
     """
     cursorObj = con.cursor()
     cursorObj.execute(
-        "CREATE TABLE IF NOT EXISTS planes (idplan integer PRIMARY KEY,edad_min text, edad_max test, fecha_inicio text, fecha_final text)")
+        "CREATE TABLE IF NOT EXISTS planes (idplan integer (1,1) PRIMARY KEY,edad_min integer, edad_max integer, fecha_inicio text, fecha_final text)")
     con.commit()
 
 def insert_plan_vaccine(con, entities): 
@@ -430,8 +415,8 @@ def insert_plan_vaccine(con, entities):
     """
     cursorObj = con.cursor()
     cursorObj.execute(
-        'INSERT INTO planes(idplan, edad_min, edad_max, fecha_inicio, fecha_final) VALUES(?, ?, ?, ?, ?)',
-        entities)
+        'INSERT INTO planes(edad_min, edad_max, fecha_inicio, fecha_final) VALUES(?, ?, ?, ?)',
+        entities)    
     con.commit()
 
 def read_info_plan():  
@@ -444,6 +429,7 @@ def read_info_plan():
     planes : tuple
     """    
     
+    '''
     correct_type = False
     while not correct_type:   
         try:
@@ -453,7 +439,7 @@ def read_info_plan():
             correct_type = True
         except:
             print('Entrada invalida, intentelo de nuevo')
-    
+    '''
     correct_type2 = False
     while not correct_type2:   
         try:
@@ -469,7 +455,7 @@ def read_info_plan():
         try:
             i=int(input("edad máxima: "))
             edad_max = str(i)
-            edad_max = edad_min.ljust(3)
+            edad_max = edad_max.ljust(3)
             correct_type3 = True
         except:
             print('Entrada invalida, intentelo de nuevo')
@@ -477,7 +463,7 @@ def read_info_plan():
 
     fecha_final = read_date('fecha final')      
             
-    planes=(idplan,edad_min,edad_max,fecha_inicio,fecha_final)
+    planes=(edad_min,edad_max,fecha_inicio,fecha_final)
     return planes
 
 def sql_fetch_plan(con): 
@@ -488,6 +474,7 @@ def sql_fetch_plan(con):
     Parameters
     ----------
     con : conexion a la base de datos SQL
+    
     Returns
     -------
     None.
@@ -504,7 +491,72 @@ def sql_fetch_plan(con):
             print(header[i]+''+str(row[i]))
     con.commit()
     print()
+
+def create_table_calendar(con):
+    """
+    Crea una tabla para el calendario de vacunacion
+
+    Parameters
+    ----------
+    con :Conexion bas de datos SQL
+
+    Returns
+    -------
+    None.
+
+    """
+    cursorObj = con.cursor()
+    cursorObj.execute("CREATE TABLE IF NOT EXISTS calendar(idAfiliado integer PRIMARY KEY,cuidadvacunacion text,nolote integer,fechaprogramada text,horaprogamada text,nombre text, apellido text,direccion text,telefono integer,correo text,fabricante text)")
+    con.commit() 
     
+def read_info_calendar(con):
+    """Lee la informacion del calendario de vacunacion
+    
+    Recibe los datos dados por el usuario y los retorna como una tupla
+    
+    Parameters
+    ----------
+    con : conexion a la base de datos SQL
+    
+    Returns
+    -------
+    calendar : tuple
+    """
+    fecha_inicio = read_date('fecha inicio')
+    horario_inicio = read_hour('inicio')
+    
+    #relaciones entre la base de datos
+    
+    
+def read_hour(word):
+    correct_type = False
+    while not correct_type:   
+        try:
+            h=int(input("hora "+word+": "))
+            if(h>=0 and h<=24):
+                hora= str(h)
+                correct_type = True
+            else:                    
+                raise 
+        except:
+            print('Entrada invalida, intentelo de nuevo')
+            
+    correct_type = False
+    while not correct_type:   
+        try:
+            m=int(input("minuto "+word+": "))
+            if(m>=0 and h<=60):
+                minuto = str(m)
+                correct_type = True
+            else:                    
+                raise 
+        except:
+            print('Entrada invalida, intentelo de nuevo')
+            
+    hora_aux = date.time(hora,minuto,0,0)
+    
+    return hora_aux         
+        
     
 ##########################################################################################################
 #                                        Presentation
