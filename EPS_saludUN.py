@@ -1,11 +1,25 @@
-from datetime import datetime
+"""
+Creado por:
+    
+    Luis Alfonso Ramirez Herrera
+    Sergio Alejandro Reita Serrano
+    David Lizzane Pulido Duquino
+    Carlos Jesus Ramirez Guerrero
+"""
+from datetime import time
 from datetime import date
+from datetime import timedelta
+from datetime import datetime
+
 import os
 import sqlite3
 from sqlite3 import Error
 
 from PIL import Image, ImageDraw, ImageFont
 
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import smtplib
 ##########################################################################################################
 #                                             Data
 ##########################################################################################################
@@ -21,8 +35,7 @@ def sql_connection():
         
     Returns
     -------
-    con : TYPE
-        DESCRIPTION.
+    con : sqlite3.Connection
 
     """
     try:
@@ -35,12 +48,12 @@ def sql_connection():
 def create_table_affiliate(con):
     """Crea una tabla con los parametros de un afiliado
     
-    Crea una tabla  con los siguentes encabezados:
+    Encabezado de la tabla:
     (id,nombre, apellidos,direccion, telefono, email, ciudad, nacimiento,fecha de afiliacion, fecha de desafiliacion, vacunado)
     
     Parameters
     ----------
-    con : Conexion con la base de datos SQL
+    con : sqlite3.Connection Conexion con la base de datos SQL
 
     Returns
     -------
@@ -54,7 +67,7 @@ def create_table_affiliate(con):
 def read_info_affiliate():  
     """Lee la informacion de un afiliado.
     
-    Retorna una tupla con los datos del afiliado. Con fecha de desafiliacion por defecto 00/00/0000 y estado vancuado 'no'
+    Retorna una tupla con los datos del afiliado. Con fecha de desafiliacion por defecto 00/00/0000 y estado vacunado 'no'
     
     Excepct
     -------
@@ -64,53 +77,85 @@ def read_info_affiliate():
     -------
     afiliado : tuple
 
-    """    
-    
+    """ 
+    #id afiliado       
     correct_type = False
-    while not correct_type:   
+    while correct_type==False:
         try:
             i=int(input("numero de identificacion: "))
-            id = str(i)
-            id=id.ljust(12)
-            correct_type = True
+            if len(str(i))>12:
+                print('''la información suministrada no debe ser mayor a doce digitos
+                            intente de nuevo...''')
+         
+            else:
+                id=str(i)
+                correct_type=True
+            
         except:
-            print('Entrada invalida, intentelo de nuevo')
-    
+            print('''la información suministrada solamente debe tener números
+                       intente de nuevo...''')
+    #nombre                  
     nombre=(input("nombre: "))
-    nombre = nombre.ljust(20)
-    
+    if len(nombre)>20:
+        nombre=nombre[:20]
+    else:
+        nombre = nombre.ljust(20)
+    #apellido
     apellido=(input("apellido: "))
-    apellido = apellido.ljust(20)
-    
+    if len(apellido)>20:
+        apellido=apellido[:20]
+    else:
+        apellido = apellido.ljust(20)
+    #direccion
     direccion=(input("direccion: "))
-    direccion = direccion.ljust(20)
-    
+    if len(direccion)>20:
+        direccion=direccion[:20]
+    else:
+        direccion = direccion.ljust(20)
+    #telefono
     correct_type = False
     while not correct_type:   
         try:
             t=int(input("telefono: "))
-            telefono=str(t)
-            telefono = telefono.ljust(12)
-            correct_type = True
+            if len(str(t))>12:
+                print('''la información suministrada no debe ser mayor a doce digitos
+                            intente de nuevo...''')
+                
+            else:
+                telefono=str(t)
+                telefono = telefono.ljust(12)
+                correct_type = True
         except:
             print('Entrada invalida, intentelo de nuevo')
+    #email       
+    correct_type=False
+    while correct_type==False:
+    
+        email=(input("email: "))
         
-    email=(input("email: "))
-    email = email.ljust(20)
-    
+        if email.find("@")>=0 and email.find(".")>=0:
+            email = email.ljust(20)
+            correct_type=True
+        else:
+            print('''El correo debe tener un '@' y un '.' para que sea válido
+                        intentelo de nuevo''')        
+    #ciudad
     ciudad=(input("ciudad: "))
-    ciudad = ciudad.ljust(20)    
-    
-       
-    nacimiento = read_date('nacimiento')
-
-    afiliacion = read_date('afiliacion')
-    
+    if len(ciudad)>20:
+        ciudad=ciudad[:20]
+    else:
+        ciudad = ciudad.ljust(20) 
+    #fecha de nacimiento   
+    nacimiento = read_date('antes')
+    #fecha de afiliacion
+    afiliacion = read_date('antes')
+    #fecha de desafiliacion
     desafiliacion = '00/00/0000'        
-    
-    vacunado='no'        
+    #estado de vacunacion
+    vacunado='no'
             
     afiliado=(id ,nombre,apellido ,direccion,telefono ,email, ciudad ,nacimiento,afiliacion,desafiliacion,vacunado )
+    
     return afiliado
 
 def insert_affiliate(con,afiliado):
@@ -118,8 +163,8 @@ def insert_affiliate(con,afiliado):
 
     Parameters
     ----------
-    con : Conexion con la base de datos SQL
-    afiliado : Tupla con la informacion del afiliado
+    con : sqlite3.Connection
+    afiliado : tuple 
 
     Returns
     -------
@@ -137,7 +182,7 @@ def update_affiliate_vaccine(con):
         
     Parameters
     ----------
-    con : Conexion con la base de datos SQL
+    con : sqlite3.Connection
 
     Returns
     -------
@@ -158,7 +203,7 @@ def update_disaffiliated(con):
     
     Parameters
     ----------
-    con : conexion a la base de datos SQL
+    con : sqlite3.Connection
 
     Returns
     -------
@@ -174,13 +219,11 @@ def update_disaffiliated(con):
     con.commit()
 
 def sql_fetch_affiliate(con): 
-    """Consulta la informacion de un afiliado de acuerdo a su id.
-    
-    Solicita el id del afiliado, e imprime la informacion asociada a ese afiliado.
-    
+    """Imprime la informacion de un afiliado de acuerdo a su id.
+        
     Parameters
     ----------
-    con : conexion a la base de datos SQL
+    con : sqlite3.Connection
 
     Returns
     -------
@@ -209,7 +252,7 @@ def create_table_vaccine_lot(con):
     
     Parameters
     ----------
-    con : Conexion a la base de datos SQL
+    con : sqlite3.Connection
 
     Returns
     -------
@@ -235,6 +278,7 @@ def read_info_vaccine_lot():
     """Lee la informacion del lote de vacunas
     
     Recibe los datos dados por el usuario y los retorna como una tupla
+    
     Returns
     -------
     lote_in : tuple
@@ -245,12 +289,14 @@ def read_info_vaccine_lot():
     while not correct_type:   
         try:
             i=int(input("numero de lote: "))
-            lote=str(i)
-            lote=lote.rjust(12, '0')
-            correct_type = True
+            if len(str(i))>12:
+                print('''El número del lote no debe ser mayor a doce dígitos''')
+            else:    
+                lote=str(i)
+                lote=lote.rjust(12, '0')
+                correct_type = True
         except:
             print('Entrada invalida, por favor digite solo numeros enteros')
-
     #fabricante
     lista= {'1':'Sinovac', '2':'Pfizer', '3':'Moderna', '4':'SputnikV', '5':'AstraZeneca', '6':'Sinopharm', '7':'Covaxim'}
     correct_type = False
@@ -261,14 +307,11 @@ def read_info_vaccine_lot():
             fabricante = lista[option]
             correct_type = True
         else: 
-            print("Opción no valida, por favor ingrese un valor valido")
-            
+            print("Opción no valida, por favor ingrese un valor valido")            
     #tipo de vacuna     
     lista= {'Sinovac':'Virus desactivado', 'Pfizer':'ARN/ADN', 'Moderna':'ARN/ADN', 'SputnikV':'Vector viral', 'AstraZeneca':'Vector viral','Sinopharm':'Virus desactivado','Covaxim':'Virus desactivado'}
     option = fabricante
     tipo_vacuna = lista[option]
-
-
     #cantidad recibida
     correct_type = False
     while not correct_type:   
@@ -279,33 +322,20 @@ def read_info_vaccine_lot():
             correct_type = True
         except:
             print('Entrada invalida, por favor digite solo numeros enteros')
-
-    #cantidad usada - revisar
-    correct_type = False
-    while not correct_type:   
-        try:
-            i=int(input("Cantidad usada: "))
-            cantidad_usada=str(i)
-            cantidad_usada=cantidad_usada.ljust(6)
-            correct_type = True
-        except:
-            print('Entrada invalida, por favor digite solo numeros enteros')
-                
+    #cantidad usada
+    cantidad_usada=0                
     #dosis necesaria ---- todas son 2, en intervalos diferentes
     lista= {'Sinovac':' en 21 dias', 'Pfizer':' en 21 dias', 'Moderna':' en 28 dias', 'SputnikV':' en 21 dias', 'AstraZeneca':'Vector viral','Sinopharm':'Virus desactivado','Covaxim':'Virus desactivado'}
     option = fabricante
-    dosis = '2'+lista[option]
-                
+    dosis = '2'+lista[option]                
     #temperatura
     lista= {'Sinovac':'8°C', 'Pfizer':'8°C', 'Moderna':'-25°C', 'SputnikV':'-18°C', 'AstraZeneca':'8°C', 'Sinopharm':'8°C', 'Covaxim':'40°C'}
     option = fabricante
     temperatura = lista[option]
-
     #efectividad
     lista= {'Sinovac':'50.38%', 'Pfizer':'95%', 'Moderna':'95%', 'SputnikV':'91%', 'AstraZeneca':'76%', 'Sinopharm':'79%', 'Covaxim':'81%'}
     option = fabricante
     efectividad = lista[option]
-
     #tiempo de proteccion
     correct_type = False
     while not correct_type:   
@@ -315,24 +345,24 @@ def read_info_vaccine_lot():
             tiempo_proteccion=tiempo_proteccion.ljust(2)+' meses'
             correct_type = True
         except:
-            print('Entrada invalida, por favor digite solo numeros enteros')
-            
+            print('Entrada invalida, por favor digite solo numeros enteros')            
     #fecha de vencimiento
-    fecha_vencimiento=read_date('fecha de vencimiento')
-    
+    fecha_vencimiento=read_date('despues')    
     #ruta de la imagen
     imagen=image(lote,fabricante, fecha_vencimiento)
     
     lote_in=(lote, fabricante, tipo_vacuna, cantidad_recibida, cantidad_usada, dosis, temperatura, efectividad, tiempo_proteccion, fecha_vencimiento, imagen)
+    
     return lote_in
 
 def insert_vaccine_lot(con,vaccine):
-    """ Inserta los datos de un lote de vacunacion en base de datos
+    """ Inserta los datos de un lote de vacunacion en la base de datos
     
     Parameters
     ----------
-    con : Conexion a la base de datos SQL    
-    vaccine : Tupla con la informacion del lote de vacunacion
+    con : sqlite3.Connection   
+    vaccine : tuple
+    
     Returns
     -------
     None.
@@ -342,14 +372,15 @@ def insert_vaccine_lot(con,vaccine):
     con.commit()
     
 def sql_fetch_vaccine_lot(con):
-    """Función que realiza un consulta en la base de datos teniendo en cuenta el numero de lote. 
+    """Imprime la informacion de un lote de vacunacion de acuerdo con su numero de lote. 
     
     Solicita el numero de lote e imprime los elementos de la fila asociada al numero de lote.
     Muestra la imagen asociada a la fabricante con el numero de lote y su fecha de vencimiento.    
         
     Parameters
     ----------
-    con : conexion a la base de datos SQL.
+    con : sqlite3.Connection
+    
     Returns
     -------
     None.
@@ -367,33 +398,17 @@ def sql_fetch_vaccine_lot(con):
         img = Image.open(row[10])
         img.show()
     con.commit()
-    
-
-
-def close_db(con):
-    """Cierra la conexion a la base de datos
-    
-
-    Parameters
-    ----------
-    con : Conexion a la base de datos SQL
-
-    Returns
-    -------
-    None.
-
-    """
-    con.close()    
-
+  
 def create_table_plan_vaccine(con): 
-    """Funcion que crea una tabla para los planes de vacunación
+    """Crea una tabla para los planes de vacunación
     
     Crea una tabla  con los siguentes encabezados:
     (id_plan, edad_min, edad_max, fecha_inicio, fecha_final)
     
     Parameters
     ----------
-    con : Conexion a la base de datos SQL
+    con : sqlite3.Connection
+    
     Returns
     -------
     None.
@@ -403,20 +418,22 @@ def create_table_plan_vaccine(con):
         "CREATE TABLE IF NOT EXISTS planes (idplan integer (1,1) PRIMARY KEY,edad_min integer, edad_max integer, fecha_inicio text, fecha_final text)")
     con.commit()
 
-def insert_plan_vaccine(con, entities): 
-    """ Inserta los datos de un plan de vacunación a la base de datos    
+def insert_plan_vaccine(con, plan): 
+    """ Inserta los datos de un plan de vacunación a la base de datos 
+    
     Parameters
     ----------
-    con : Conexion con la base de datos SQL
-    planes : Tupla con la informacion del plan de vacunación
+    con : sqlite3.Connection    
+    plan : tuple
+    
     Returns
     -------
     None.
     """
     cursorObj = con.cursor()
     cursorObj.execute(
-        'INSERT INTO planes(edad_min, edad_max, fecha_inicio, fecha_final) VALUES(?, ?, ?, ?)',
-        entities)    
+        'INSERT INTO planes(id,edad_min, edad_max, fecha_inicio, fecha_final) VALUES(?, ?, ?, ?,?)',
+        plan)    
     con.commit()
 
 def read_info_plan():  
@@ -427,53 +444,68 @@ def read_info_plan():
     Returns
     -------
     planes : tuple
-    """    
-    
-    '''
+    """       
+    #id plan de vacunacion
     correct_type = False
     while not correct_type:   
         try:
             i=int(input("numero de identificacion: "))
             idplan = str(i)
-            idplan = idplan.ljust(3)
-            correct_type = True
+            if len(idplan)>3:
+                print('''El id del plan debe ser de máximio 3 digitos''')
+            else:   
+                idplan = idplan.ljust(3)
+                correct_type = True
         except:
             print('Entrada invalida, intentelo de nuevo')
-    '''
+    #edad minima plan de vacunacion
     correct_type2 = False
     while not correct_type2:   
         try:
             i=int(input("edad mínima: "))
             edad_min = str(i)
-            edad_min = edad_min.ljust(3)
             correct_type2 = True
         except:
             print('Entrada invalida, intentelo de nuevo')
-    
+    #edad maxima plan de vacunacion
     correct_type3 = False
     while not correct_type3:   
         try:
             i=int(input("edad máxima: "))
-            edad_max = str(i)
-            edad_max = edad_max.ljust(3)
-            correct_type3 = True
+            if int(edad_min)>= i:
+                print('''La edad maxima debe ser mayor a la edad minima
+                            intentelo de nuevo...''')
+            else:
+                edad_max = str(i)
+                edad_max = edad_max.ljust(3)
+                correct_type3 = True
         except:
             print('Entrada invalida, intentelo de nuevo')
-    fecha_inicio = read_date('fecha de inicio')
-
-    fecha_final = read_date('fecha final')      
             
+    edad_min = edad_min.ljust(3)
+    
+    correct_type4=False
+    #fecha inicio plan de vacunacion
+    fecha_inicio = read_date('despues')
+    
+    while correct_type4==False:
+        #fecha final plan de vacunacion
+        fecha_final = read_date('despues')       
+        if datetime.strptime(fecha_inicio,'%d/%m/%Y')>datetime.strptime(fecha_final,'%d/%m/%Y'):
+            print('''La fecha de inicio no puede ser mayor a la fecha final... ''')
+        else:
+            correct_type4=True
+       
     planes=(edad_min,edad_max,fecha_inicio,fecha_final)
+    
     return planes
 
 def sql_fetch_plan(con): 
-    """Consulta la informacion de un plan de acuerdo a su id.
-    
-    Solicita el id del afiliado, e imprime la informacion asociada a ese planes.
-    
+    """Imprime la informacion de un plan de vacunacion de acuerdo a su id.
+        
     Parameters
     ----------
-    con : conexion a la base de datos SQL
+    con : sqlite3.Connection
     
     Returns
     -------
@@ -491,72 +523,131 @@ def sql_fetch_plan(con):
             print(header[i]+''+str(row[i]))
     con.commit()
     print()
-
-def create_table_calendar(con):
-    """
-    Crea una tabla para el calendario de vacunacion
+    
+def create_calendar(con): 
+    """Crea el calendario de vacunacion
+    
+    filtra los afiliados disponibles de acuerdo con el plan de vacunacion y la
+    disponibilidad de vacunas y les asigna una cita. Retorna la informacion
+    (fecha,idafiliado,nombre,apellido,ciudad,direccion,telefono,correo,fabricante,no lote)
 
     Parameters
     ----------
-    con :Conexion bas de datos SQL
+    con : sqlite3.Connection
+
+    Returns
+    -------
+    calendario : list
+
+    """
+    #Fecha de inicio del calendario de vacunacion
+    print('Fecha de inicio calendario de vacunacion: ')
+    fecha_inicio = read_date('despues')
+    #Hora de inicio del calendario de vacunacion
+    print('Hora de inicio calendario de vacunacion: ')
+    hora_inicial = read_hour()    
+    
+    cursorObj = con.cursor()
+    
+    #Busqueda de afiliados no vacunados y no desafiliados
+    buscar_afiliado='SELECT * FROM afiliados WHERE vacunado="no" and desafiliacion="00/00/0000" '
+    
+    cursorObj.execute(buscar_afiliado)
+    afiliados = cursorObj.fetchall()
+        
+    #filtra los planes a partir de la fecha de inicio de la agenda   
+    buscar_plan='SELECT * FROM planes' 
+    cursorObj.execute(buscar_plan)
+    all_planes = cursorObj.fetchall()
+    planes_habilitados = []
+    for row in all_planes:
+        plan = []
+        if string_to_date(row[4]) >= string_to_date(fecha_inicio):
+            plan = list(row)
+            if string_to_date(row[3]) <= string_to_date(fecha_inicio):                       
+                plan[3] = fecha_inicio 
+            planes_habilitados.append(plan)
+    
+    #calcula los usuarios validos para vacunacion por edad en el plan de vacuancion y les asigna su plan de vacunacion
+    afiliados_habilitados = []
+    for plan in planes_habilitados:
+        for afiliado in afiliados:                
+                if calculate_age(afiliado)>=plan[1] and calculate_age(afiliado)<plan[2]:
+                    afiliado_aux =list(afiliado)
+                    afiliado_aux.append(plan[3])#agrega la fecha inicial de posible vacunacion
+                    afiliado_aux.append(plan[4])#agrega la fecha final de posible vacunacion
+                    afiliados_habilitados.append(afiliado_aux)                    
+    
+    
+    #cálculo de fecha y hora para los afiliados habilitados
+    citas = {}   
+    for afiliado in afiliados_habilitados:        
+        agenda = date_complete(afiliado[11],str(hora_inicial))#se identifica la fecha  y hora  inical
+        
+        #valida en que fecha el afiliado puede vacunarse
+        while agenda < date_complete(afiliado[12],str(hora_inicial)):
+            
+            if (agenda not in citas.keys()):#si no existe nadie en esa fecha se asigna
+                citas[agenda] = afiliado                
+                break
+            else:
+                agenda += timedelta(hours=1) 
+            
+    fechas_citas = sorted(citas.keys()) #fecha de las citas de forma ordenada 
+               
+    #asignacion de vacunas       
+    buscar_plan='SELECT * FROM lote_Vacuna' 
+    cursorObj.execute(buscar_plan)
+    vacunas = cursorObj.fetchall()    
+    calendario = []
+    indice = 0
+    for vacuna in vacunas:
+        dosis_disponibles = vacuna[3]//2 #como son 2 dosis por persona la cantidad se reduce a la mitad
+        while indice < len(citas):
+            if dosis_disponibles > 0:
+                #fecha|idafiliado|nombre|apellido|ciudad|direccion|telefono|correo|fabricante|no lote
+                cita = fechas_citas[indice]               
+                calendario.append((cita,citas[cita][0],citas[cita][1],citas[cita][2],citas[cita][6],citas[cita][3],citas[cita][4],citas[cita][5],vacuna[0],vacuna[1]))
+                dosis_disponibles -= 1
+                indice += 1
+            else:
+                break
+            
+    return calendario
+    
+def date_complete(f,h):
+    """
+    Crea un formato hora fecha del tipo datetime.
+
+    Parameters
+    ----------
+    f : string fecha
+    h : string hora
+
+    Returns
+    -------
+    fecha_completa : datetime
+
+    """
+    h = h.split(':')#convierte la hora inical en una lista
+    f = f.split('/')#convierte la fecha de inicio en una lista
+    fecha_completa = datetime(int(f[2]),int(f[1]),int(f[0]),int(h[0]),int(h[1]))
+    return fecha_completa
+    
+def close_db(con):
+    """Cierra la conexion a la base de datos
+    
+
+    Parameters
+    ----------
+    con : Conexion a la base de datos SQL
 
     Returns
     -------
     None.
 
     """
-    cursorObj = con.cursor()
-    cursorObj.execute("CREATE TABLE IF NOT EXISTS calendar(idAfiliado integer PRIMARY KEY,cuidadvacunacion text,nolote integer,fechaprogramada text,horaprogamada text,nombre text, apellido text,direccion text,telefono integer,correo text,fabricante text)")
-    con.commit() 
-    
-def read_info_calendar(con):
-    """Lee la informacion del calendario de vacunacion
-    
-    Recibe los datos dados por el usuario y los retorna como una tupla
-    
-    Parameters
-    ----------
-    con : conexion a la base de datos SQL
-    
-    Returns
-    -------
-    calendar : tuple
-    """
-    fecha_inicio = read_date('fecha inicio')
-    horario_inicio = read_hour('inicio')
-    
-    #relaciones entre la base de datos
-    
-    
-def read_hour(word):
-    correct_type = False
-    while not correct_type:   
-        try:
-            h=int(input("hora "+word+": "))
-            if(h>=0 and h<=24):
-                hora= str(h)
-                correct_type = True
-            else:                    
-                raise 
-        except:
-            print('Entrada invalida, intentelo de nuevo')
-            
-    correct_type = False
-    while not correct_type:   
-        try:
-            m=int(input("minuto "+word+": "))
-            if(m>=0 and h<=60):
-                minuto = str(m)
-                correct_type = True
-            else:                    
-                raise 
-        except:
-            print('Entrada invalida, intentelo de nuevo')
-            
-    hora_aux = date.time(hora,minuto,0,0)
-    
-    return hora_aux         
-        
+    con.close()         
     
 ##########################################################################################################
 #                                        Presentation
@@ -565,7 +656,7 @@ def read_hour(word):
 def clear_screen():
     """Limpia la consola
 
-    identifica el sistema operativo en el que se trabaja y llama a la funcion de limpieza de consola.
+    Identifica el sistema operativo en el que se trabaja y llama a la funcion de limpieza de consola.
     
     Returns
     -------
@@ -668,7 +759,7 @@ def menu_state_affiliate():
     
 def menu_info_affiliate():
     """
-    Imprime el menu de consulata de afiliado
+    Imprime el menu de consulta de afiliado
 
     Returns
     -------
@@ -726,7 +817,7 @@ def menu_new_vaccine():
     
 def menu_info_vaccine():
     """
-    Imprime el menu de consulta lote de cavunacion
+    Imprime el menu de consulta lote de vacunacion
 
     Returns
     -------
@@ -809,6 +900,7 @@ def menu_calendar_vaccune():
     None.
 
     """
+    clear_screen()
     print('''#############################################################################################
                                      Calendario de vacunacion
 #############################################################################################
@@ -817,6 +909,7 @@ def menu_calendar_vaccune():
     1. Consulta general calendario de vacunacion
     2. Consulta individual calendario de vacunacion
     3. Crear calendario de vacunacion
+    4. Enviar correos
     b. Volver al menu anterior
     e. Salir
     
@@ -831,6 +924,7 @@ def menu_calendar_vaccune_general():
     None.
 
     """
+    clear_screen()
     print('''#############################################################################################
                                      Consulta general calendario de vacunacion
 #############################################################################################
@@ -855,6 +949,7 @@ def menu_calendar_vaccune_individual():
     None.
 
     """
+    clear_screen()
     print('''#############################################################################################
                                      Consulta individual calendario de vacunacion
 #############################################################################################
@@ -862,7 +957,7 @@ def menu_calendar_vaccune_individual():
     Consulta por Id de afiliado el calendario de vacunacion
     ''')   
     
-def menu_mew_calendar_vaccune():
+def menu_new_calendar_vaccune():
     """
     Imprime el menu de Crear nuevo calendario de vacunacion
 
@@ -871,12 +966,14 @@ def menu_mew_calendar_vaccune():
     None.
 
     """
+    clear_screen()
     print('''#############################################################################################
                                      Crear nuevo calendario de vacunacion
 #############################################################################################
     
-     El sistema creara por pedido del operador la programación de vacunas a partir 
-     de la fecha de inicio indicada, en el horario de atención indicado
+     Ingrese la fecha de inicio  y el horario de atención para crear el nuevo 
+     calendario de vacunacion.
+     
     ''')       
 
 def menu_factory():
@@ -898,26 +995,113 @@ def menu_factory():
         7. Covaxim 
     
     ''')   
+ 
+def menu_send_mail():
+    """
+    Imprime el menu de enviar correos
+
+    Returns
+    -------
+    None.
+
+    """
+    clear_screen()
+    print('''#############################################################################################
+                                     Enviar Emails
+#############################################################################################
+         
+    ''')  
     
   
 ##########################################################################################################
 #                                        Bussisnes logic
 ##########################################################################################################
-def image(lote,fabricante, fecha_vencimiento):
-    """Funcion para crear e ingresar una imagen de acuerdo a numero de lote, el fabricante y la fecha de vencimiento
-    
-    Utilizando la libreria pill, crea una imagen de acuerdo al fabricante, y le 
-    añade el numero de lote y fecha de vencimiento a la imagen
-    
+def send_mail(calendario):
+    """
+    Envia un correo a cada afiliado con la fecha, hora y ciudad de vacunacion 
+    establecidas en el calendario de vacunacion, e imprime si el envio fue exitoso 
+
     Parameters
     ----------
-    lote : numero de lote.
-    fabricante : nombre del fabricante.
-    fecha_vencimiento : fecha de vencimiento del lote.
+    calendario : list
 
     Returns
     -------
-    ruta : la ruta en la que se guardo la imagen.
+    None.
+
+    """
+       
+    for row in calendario:
+                
+        # crea una instancia de objeto message
+        msg = MIMEMultipart()
+        #fecha|idafiliado|nombre|apellido|ciudad|direccion|telefono|correo|fabricante|no lote
+        
+        fecha  = row[0]
+        idafiliado = str(row[1])
+        nombre = str(row[2])
+        apellido = str(row[3])
+        ciudad = str(row[4])
+        correo = str(row[7])
+        
+        message = "Señor afiliado "+nombre+' '+ apellido+' identificado con '+ idafiliado
+        message += ' , tiene una cita de vacunacion el dia '+str(fecha.day)+'/'+str(fecha.month)+'/'+str(fecha.year)+ ' a la hora '+str(fecha.hour)+':'+str(fecha.minute)+' en la ciudad ' + ciudad
+        message += '. Att: EPS UN'
+        
+        # configura los parametros del mensaje
+        password = "proyectopoo"
+        msg['From'] = "vacunacionepssaludun@gmail.com"
+        msg['To'] = correo
+        msg['Subject'] = "Cita de vacunacion"
+         
+        # añade al mensaje el cuerpo del mensaje
+        msg.attach(MIMEText(message, 'plain'))
+         
+        #crea un servidor
+        server = smtplib.SMTP('smtp.gmail.com: 587')
+         
+        server.starttls()
+         
+        # Credenciales de inicio de sesion para enviar el email
+        server.login(msg['From'], password)
+         
+         
+        # envia el mensaje via server.
+        server.sendmail(msg['From'], msg['To'], msg.as_string())
+         
+        server.quit()
+         
+        print ("successfully sent email to: " + msg['To'])
+   
+def calculate_age(afiliado):
+    """
+    Calcula la edad de un afiliado.
+
+    Parameters
+    ----------
+    afiliado : tuple
+
+    Returns
+    -------
+    edad : integer
+
+    """
+    dias = (date.today()- string_to_date(afiliado[7])).days    
+    edad= dias // 365    
+    return edad
+ 
+def image(lote,fabricante, fecha_vencimiento):
+    """Crear una imagen de acuerdo a numero de lote, el fabricante y la fecha de vencimiento
+        
+    Parameters
+    ----------
+    lote : integer
+    fabricante : string
+    fecha_vencimiento : date
+
+    Returns
+    -------
+    ruta : string  ruta en la que se guarda la imagen.
 
     """
      
@@ -948,7 +1132,7 @@ def date_to_string(date):
 
     Parameters
     ----------
-    date : objeto tipo fecha
+    date : date
 
     Returns
     -------
@@ -959,20 +1143,37 @@ def date_to_string(date):
     new_date_string = str(f[2])+'/'+str(f[1])+'/'+str(f[0])
     return new_date_string
 
-def read_date(word):
+def string_to_date(str_date):
+    """
+    Retorna un objeto date de acuerdo a una fecha de tipo string
+
+    Parameters
+    ----------
+    str_date : string
+
+    Returns
+    -------
+    new_date : date
+
+    """    
+    f = str_date.split('/')    
+    new_date = date.fromisoformat(str(f[2])+'-'+str(f[1])+'-'+str(f[0]))
+    
+    return new_date
+
+def read_date(type_date):
     """
     Funcion que lee una fecha ingresada por el usuario y la retorna en formato de texto DD/MM/AAAA
 
-    Imprime un encabezado con el tipo de fecha que solicita, y pide al usuario 
-    ingresar el dia, mes y año. Comprobando que se ingresen datos numericos. 
-    Si word es 'es vacunacion' valida que las entradas de fechas sean mayores 
-    a la fecha en la que se hace la solicitud. De lo contrario obliga a que la 
-    fecha ingresadas sea menor que la fecha en la que se hace la solicitud.
-    Retorna un string con el formato de fecha  DD/MM/AAAA
+    Comprueba que se ingresen datos numericos. 
+    Si type_date es 'antes' valida que las entradas de fechas sean menores 
+    a la fecha en la que se hace la solicitud. Si type_date es 'despues'  
+    valida que las entradas de fechas sean mayores  a la fecha en la que se 
+    hace la solicitud.
     
     Parameters
     ----------
-    word : string tipo de fecha.
+    type_date : string - tipo de fecha 
 
     Raises
     ------
@@ -980,20 +1181,17 @@ def read_date(word):
 
     Returns
     -------
-    date_aux: String fecha
+    date_aux: string - fecha
 
     """
     
     correct_date = False
     while not correct_date :
-        print()
-        print(word)
-        
         correct_type = False
         while not correct_type:   
             try:
-                d=int(input("dia "+word+": "))
-                if(d>=0 and d<=31):
+                d=int(input("dia: "))
+                if(d>0 and d<=31):
                     dia= str(d)
                     dia = dia.rjust(2,"0")
                     correct_type = True
@@ -1005,8 +1203,8 @@ def read_date(word):
         correct_type = False        
         while not correct_type:   
             try:
-                m=int(input("mes "+word+": "))
-                if(m>=0 and m<=12):
+                m=int(input("mes: "))
+                if(m>0 and m<=12):
                     mes = str(m)
                     mes= mes.rjust(2,"0")
                     correct_type = True
@@ -1020,8 +1218,8 @@ def read_date(word):
         while not correct_type:   
             try:
                 
-                a=int(input("ano "+word+": "))
-                if(a>=0):
+                a=int(input("ano: "))
+                if(a>0):
                     ano = str(a)
                     ano= ano.rjust(4,"0")
                     correct_type = True
@@ -1032,35 +1230,80 @@ def read_date(word):
                   
         date_aux =ano+"-"+mes+"-"+dia
         
-        if (word =='fecha de vencimiento' or word =='fecha de inicio' or word =='fecha final'):
+        if (type_date =='despues'):
             if date.fromisoformat(date_aux) < date.today():
                 print('La fecha ingresada es anterior a la fecha actual, intentelo de nuevo.')
             else:
                 correct_date = True
-        else:    
-            if date_aux == '0000-00-00':
-                correct_date = True
-            elif date.fromisoformat(date_aux) > date.today():
-                print('Fecha fuera de rango, intentelo de nuevo.')
+        elif (type_date =='antes'):
+            
+            if date.fromisoformat(date_aux) > date.today():
+                print('La fecha ingresada es posterior a la fecha actual, intentelo de nuevo.')
             else:
                 correct_date = True
             
     date_aux =dia+"/"+mes+"/"+ano          
     return date_aux
 
+def read_hour():
+    """
+    Lee la hora y la retorna en un tipo time
+
+    Raises
+    ------
     
-def main():    
+        Error cuando los valores ingresados no estan dentro del rango de horas o minutos
+
+    Returns
+    -------
+    hora_aux : time
+
+    """    
+    correct_type = False
+    while not correct_type:   
+        try:
+            h=int(input("hora: "))
+            if(h>=0 and h<=24):
+                correct_type = True
+            else:                    
+                raise 
+        except:
+            print('Entrada invalida, intentelo de nuevo')
+            
+    correct_type = False
+    while not correct_type:   
+        try:
+            m=int(input("minuto: "))
+            if(m>=0 and h<=60):
+                correct_type = True
+            else:                    
+                raise 
+        except:
+            print('Entrada invalida, intentelo de nuevo')
+            
+    hora_aux = time(h,m,0)
     
-    con=sql_connection()
+    return hora_aux 
+    
+def main():
+    """
+    Funcion principal con la logica del menu y el llamado a otras funciones
+
+    Returns
+    -------
+    None.
+
+    """    
+       
+    con=sql_connection()    
     create_table_affiliate(con)
     create_table_vaccine_lot(con)
     create_table_plan_vaccine(con)
-    create_table_calendar(con)
-    
-    
+    calendario = []
     salir=False
-    while not salir:
-                    
+    while not salir: 
+
+        print(type((1,2)))         
         menu()
         option = input('Ingrese una opcion: ')
             
@@ -1157,11 +1400,14 @@ def main():
                 else:
                     print('Opcion no valida')
                     
-        elif(option == '4'): #menu agenda de vacunacion
-                        
+        elif(option == '4'): #menu agenda de vacunacion             
+                     
             back = False
             while not back:
-                menu_calendar_vaccune()
+                menu_calendar_vaccune()               
+                
+                #Organizar e ingresar los datos en la tabla calendario
+
                 option = input('Ingrese una opcion: ')
                 if(option=='1'): #consulta general calendario
                     
@@ -1172,11 +1418,15 @@ def main():
                     menu_calendar_vaccune_individual()
                     input('Presione cualquier tecla para continuar...')
                 elif(option == '3'): #crear calendario                    
-                    menu_mew_calendar_vaccune()
-                    input('Presione cualquier tecla para continuar...')    
+                    menu_new_calendar_vaccune()
+                    calendario = create_calendar(con)
+                    input('Presione cualquier tecla para continuar...') 
+                elif(option == '4'):#Enviar email a los afiliados
+                    menu_send_mail()
+                    send_mail(calendario)
                 elif(option == 'b' or option == 'B'): # Volver al menu anterior
                     back = True
-                elif(option == 'e' or option == 'E'): # Salir del programa
+                elif(option == 'e' or option == 'E'): # Salir del programa4
                     back = True
                     salir = True
                 else:
@@ -1188,5 +1438,5 @@ def main():
             print('Opcion no valida')
     
     close_db(con)
-    
+   
 main()
