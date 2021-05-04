@@ -36,7 +36,6 @@ def sql_connection():
     Returns
     -------
     con : sqlite3.Connection
-
     """
     try:
         con = sqlite3.connect('db.db')
@@ -54,11 +53,9 @@ def create_table_affiliate(con):
     Parameters
     ----------
     con : sqlite3.Connection Conexion con la base de datos SQL
-
     Returns
     -------
     None.
-
     """
     cursorObj = con.cursor()
     cursorObj.execute("CREATE TABLE IF NOT EXISTS afiliados(id integer PRIMARY KEY,nombre text,apellidos text,direccion text,telefono real,email text, ciudad text,nacimiento text,afiliacion text,desafiliacion text,vacunado text)")
@@ -76,7 +73,6 @@ def read_info_affiliate():
     Returns
     -------
     afiliado : tuple
-
     """ 
     #id afiliado       
     correct_type = False
@@ -160,16 +156,13 @@ def read_info_affiliate():
 
 def insert_affiliate(con,afiliado):
     """ Inserta los datos de un afiliado a la base de datos    
-
     Parameters
     ----------
     con : sqlite3.Connection
     afiliado : tuple 
-
     Returns
     -------
     None.
-
     """
     cursorObj = con.cursor()
     cursorObj.execute('''INSERT INTO afiliados (id ,nombre,apellidos ,direccion,telefono ,email, ciudad ,nacimiento,afiliacion,desafiliacion,vacunado) VALUES(?, ?, ?, ?,?,?,?, ?, ?, ?,?)''',afiliado)
@@ -182,12 +175,10 @@ def update_affiliate_vaccine(con):
         
     Parameters
     ----------
-    con : sqlite3.Connection
-
+    con : Conexion con la base de datos SQL
     Returns
     -------
     None.
-
     """
     cursorObj = con.cursor()
     vacunado=input("identificacion del afiliado vacunado: ")
@@ -204,11 +195,9 @@ def update_disaffiliated(con):
     Parameters
     ----------
     con : sqlite3.Connection
-
     Returns
     -------
     None.
-
     """
     cursorObj = con.cursor()
     desafiliado=input("identificacion del afiliado a desafiliar: ")
@@ -224,11 +213,9 @@ def sql_fetch_affiliate(con):
     Parameters
     ----------
     con : sqlite3.Connection
-
     Returns
     -------
     None.
-
     """
     cursorObj = con.cursor()
     afiliad=input("id del afiliado a consultar: ")
@@ -253,11 +240,9 @@ def create_table_vaccine_lot(con):
     Parameters
     ----------
     con : sqlite3.Connection
-
     Returns
     -------
     None.
-
     """
     cursorObj = con.cursor()
     cursorObj.execute("""CREATE TABLE IF NOT EXISTS lote_Vacuna(
@@ -370,6 +355,27 @@ def insert_vaccine_lot(con,vaccine):
     cursorObj = con.cursor()
     cursorObj.execute("INSERT INTO lote_Vacuna(lote, fabricante, tipo_vacuna, cantidad_recibida, cantidad_usada, dosis, temperatura, efectividad, tiempo_proteccion, fecha_vencimiento, imagen) VALUES (?,?,?,?,?,?,?,?,?,?,?)", vaccine)
     con.commit()
+
+
+def update_increment_lot(con,lote,y):
+    """ actualiza el numero de vacunas usadas en la base de datos
+    
+    Parameters
+    ----------
+    con : sqlite3.Connection   
+    lote : id del lote
+    y : numero de vacunas
+    
+    Returns
+    -------
+    None.
+    """
+
+    cursorObj = con.cursor()
+    s=y*2
+    actualizar='update Lote_Vacuna SET cantidad_usada = "'+str(s)+'" where lote ='+str(lote)
+    cursorObj.execute(actualizar)
+    con.commit()
     
 def sql_fetch_vaccine_lot(con):
     """Imprime la informacion de un lote de vacunacion de acuerdo con su numero de lote. 
@@ -415,7 +421,7 @@ def create_table_plan_vaccine(con):
     """
     cursorObj = con.cursor()
     cursorObj.execute(
-        "CREATE TABLE IF NOT EXISTS planes (idplan integer (1,1) PRIMARY KEY,edad_min integer, edad_max integer, fecha_inicio text, fecha_final text)")
+        "CREATE TABLE IF NOT EXISTS planes (idplan integer PRIMARY KEY,edad_min integer, edad_max integer, fecha_inicio text, fecha_final text)")
     con.commit()
 
 def insert_plan_vaccine(con, plan): 
@@ -432,7 +438,7 @@ def insert_plan_vaccine(con, plan):
     """
     cursorObj = con.cursor()
     cursorObj.execute(
-        'INSERT INTO planes(id,edad_min, edad_max, fecha_inicio, fecha_final) VALUES(?, ?, ?, ?,?)',
+        'INSERT INTO planes(idplan,edad_min, edad_max, fecha_inicio, fecha_final) VALUES(?, ?, ?, ?,?)',
         plan)    
     con.commit()
 
@@ -496,7 +502,7 @@ def read_info_plan():
         else:
             correct_type4=True
        
-    planes=(edad_min,edad_max,fecha_inicio,fecha_final)
+    planes=(idplan,edad_min,edad_max,fecha_inicio,fecha_final)
     
     return planes
 
@@ -530,16 +536,15 @@ def create_calendar(con):
     filtra los afiliados disponibles de acuerdo con el plan de vacunacion y la
     disponibilidad de vacunas y les asigna una cita. Retorna la informacion
     (fecha,idafiliado,nombre,apellido,ciudad,direccion,telefono,correo,fabricante,no lote)
-
     Parameters
     ----------
     con : sqlite3.Connection
-
     Returns
     -------
     calendario : list
-
     """
+    cursorObj = con.cursor()
+    
     #Fecha de inicio del calendario de vacunacion
     print('Fecha de inicio calendario de vacunacion: ')
     fecha_inicio = read_date('despues')
@@ -547,11 +552,8 @@ def create_calendar(con):
     print('Hora de inicio calendario de vacunacion: ')
     hora_inicial = read_hour()    
     
-    cursorObj = con.cursor()
-    
     #Busqueda de afiliados no vacunados y no desafiliados
     buscar_afiliado='SELECT * FROM afiliados WHERE vacunado="no" and desafiliacion="00/00/0000" '
-    
     cursorObj.execute(buscar_afiliado)
     afiliados = cursorObj.fetchall()
         
@@ -608,26 +610,23 @@ def create_calendar(con):
                 #fecha|idafiliado|nombre|apellido|ciudad|direccion|telefono|correo|fabricante|no lote
                 cita = fechas_citas[indice]               
                 calendario.append((cita,citas[cita][0],citas[cita][1],citas[cita][2],citas[cita][6],citas[cita][3],citas[cita][4],citas[cita][5],vacuna[0],vacuna[1]))
+                update_increment_lot(con,vacuna[0],len(citas))
                 dosis_disponibles -= 1
                 indice += 1
             else:
                 break
-            
     return calendario
     
 def date_complete(f,h):
     """
     Crea un formato hora fecha del tipo datetime.
-
     Parameters
     ----------
     f : string fecha
     h : string hora
-
     Returns
     -------
     fecha_completa : datetime
-
     """
     h = h.split(':')#convierte la hora inical en una lista
     f = f.split('/')#convierte la fecha de inicio en una lista
@@ -637,15 +636,12 @@ def date_complete(f,h):
 def close_db(con):
     """Cierra la conexion a la base de datos
     
-
     Parameters
     ----------
     con : Conexion a la base de datos SQL
-
     Returns
     -------
     None.
-
     """
     con.close()         
     
@@ -655,13 +651,11 @@ def close_db(con):
 
 def clear_screen():
     """Limpia la consola
-
     Identifica el sistema operativo en el que se trabaja y llama a la funcion de limpieza de consola.
     
     Returns
     -------
     None.
-
     """
     if os.name == "posix":
         os.system ("clear")
@@ -671,11 +665,9 @@ def clear_screen():
 def menu():
     """
     Imprime el menu principal.
-
     Returns
     -------
     None.
-
     """
     clear_screen()
     print(
@@ -697,11 +689,9 @@ def menu():
 def menu_affiliate():
     """
     Imprime el menu de gestion de afiliados
-
     Returns
     -------
     None.
-
     """
     clear_screen()
     print('''#############################################################################################
@@ -720,11 +710,9 @@ def menu_affiliate():
 def menu_new_affiliate():
     """
     Imprime el menu de nuevo afiliado
-
     Returns
     -------
     None.
-
     """    
     clear_screen()
     print('''#############################################################################################
@@ -738,11 +726,9 @@ def menu_new_affiliate():
 def menu_state_affiliate():
     """
     Imprime el menu de estado de afiliado
-
     Returns
     -------
     None.
-
     """    
     clear_screen()
     print('''#############################################################################################
@@ -760,11 +746,9 @@ def menu_state_affiliate():
 def menu_info_affiliate():
     """
     Imprime el menu de consulta de afiliado
-
     Returns
     -------
     None.
-
     """
     clear_screen()
     print('''#############################################################################################
@@ -778,11 +762,9 @@ def menu_info_affiliate():
 def menu_vaccine():
     """
     Imprime el menu de gestion de lotes de vacunacion
-
     Returns
     -------
     None.
-
     """
     clear_screen()
     print('''#############################################################################################
@@ -800,11 +782,9 @@ def menu_vaccine():
 def menu_new_vaccine():
     """
     Imprime el menu de nuevo lote de vacunacion
-
     Returns
     -------
     None.
-
     """
     clear_screen()
     print('''#############################################################################################
@@ -818,11 +798,9 @@ def menu_new_vaccine():
 def menu_info_vaccine():
     """
     Imprime el menu de consulta lote de vacunacion
-
     Returns
     -------
     None.
-
     """
     clear_screen()
     print('''#############################################################################################
@@ -836,11 +814,9 @@ def menu_info_vaccine():
 def menu_plan_vaccine():
     """
     Imprime el menu de gestion del plan de vacunacion
-
     Returns
     -------
     None.
-
     """
     clear_screen()
     print('''#############################################################################################
@@ -858,11 +834,9 @@ def menu_plan_vaccine():
 def menu_new_plan_vaccine():
     """
     Imprime el menu de nuevo plan de vacunacion
-
     Returns
     -------
     None.
-
     """
     clear_screen()
     print('''#############################################################################################
@@ -876,11 +850,9 @@ def menu_new_plan_vaccine():
 def menu_info_plan_vaccine():
     """
     Imprime el menu de consultar plan de vacunacion
-
     Returns
     -------
     None.
-
     """
     clear_screen()
     print('''#############################################################################################
@@ -894,11 +866,9 @@ def menu_info_plan_vaccine():
 def menu_calendar_vaccune():
     """
     Imprime el menu de calendario de vacunacion
-
     Returns
     -------
     None.
-
     """
     clear_screen()
     print('''#############################################################################################
@@ -918,11 +888,9 @@ def menu_calendar_vaccune():
 def menu_calendar_vaccune_general():
     """
     Imprime el menu de Consulta general calendario de vacunacion
-
     Returns
     -------
     None.
-
     """   
     clear_screen()
     print('''#############################################################################################
@@ -947,11 +915,9 @@ def menu_calendar_vaccune_general():
 def menu_calendar_vaccune_individual():
     """
     Imprime el menu de Consulta individual calendario de vacunacion
-
     Returns
     -------
     None.
-
     """
     clear_screen()
     print('''#############################################################################################
@@ -964,11 +930,9 @@ def menu_calendar_vaccune_individual():
 def menu_new_calendar_vaccune():
     """
     Imprime el menu de Crear nuevo calendario de vacunacion
-
     Returns
     -------
     None.
-
     """
     clear_screen()
     print('''#############################################################################################
@@ -983,11 +947,9 @@ def menu_new_calendar_vaccune():
 def menu_factory():
     """
     Imprime el menu de seleccion de fabricas
-
     Returns
     -------
     None.
-
     """
     print('''  Fabricas:
         1. Sinovak 
@@ -1003,11 +965,9 @@ def menu_factory():
 def menu_send_mail():
     """
     Imprime el menu de enviar correos
-
     Returns
     -------
     None.
-
     """
     clear_screen()
     print('''#############################################################################################
@@ -1020,15 +980,12 @@ def print_individual_calendar(calendario):
     """
     Recibe el id del afiliado e imprime la informacion de su cita de vacunacion, 
     los datos del afiliado y la vacuna que se aplicará.
-
     Parameters
     ----------
     calendario : list
-
     Returns
     -------
     None.
-
     """
     idafiliado = input('Ingrese el id del afiliado a consultar: ')
     none_afiliado = True   
@@ -1055,16 +1012,13 @@ def print_individual_calendar(calendario):
 def print_general_calendar(calendario,indice_orden):
     """
     Imprime los datos ordenados de acuerdo con el indice de ordenamiento.
-
     Parameters
     ----------
     calendario : list
     indice_orden : integer
-
     Returns
     -------
     None.
-
     """
     if len(calendario)==0:
         print("No hay un calendario vigente.")
@@ -1096,15 +1050,12 @@ def send_mail(calendario):
     """
     Envia un correo a cada afiliado con la fecha, hora y ciudad de vacunacion 
     establecidas en el calendario de vacunacion, e imprime si el envio fue exitoso 
-
     Parameters
     ----------
     calendario : list
-
     Returns
     -------
     None.
-
     """
        
     for row in calendario:
@@ -1152,15 +1103,12 @@ def send_mail(calendario):
 def calculate_age(afiliado):
     """
     Calcula la edad de un afiliado.
-
     Parameters
     ----------
     afiliado : tuple
-
     Returns
     -------
     edad : integer
-
     """
     dias = (date.today()- string_to_date(afiliado[7])).days    
     edad= dias // 365    
@@ -1174,11 +1122,9 @@ def image(lote,fabricante, fecha_vencimiento):
     lote : integer
     fabricante : string
     fecha_vencimiento : date
-
     Returns
     -------
     ruta : string  ruta en la que se guarda la imagen.
-
     """
      
     
@@ -1205,15 +1151,12 @@ def image(lote,fabricante, fecha_vencimiento):
 def date_to_string(date):
     """
     Funcion que convierte un objeto fecha a un string en formato dd/mm/aaaa.
-
     Parameters
     ----------
     date : date
-
     Returns
     -------
     new_date_string : string dd/mm/aaaa.
-
     """
     f = date.isoformat().split('-')
     new_date_string = str(f[2])+'/'+str(f[1])+'/'+str(f[0])
@@ -1222,15 +1165,12 @@ def date_to_string(date):
 def string_to_date(str_date):
     """
     Retorna un objeto date de acuerdo a una fecha de tipo string
-
     Parameters
     ----------
     str_date : string
-
     Returns
     -------
     new_date : date
-
     """    
     f = str_date.split('/')    
     new_date = date.fromisoformat(str(f[2])+'-'+str(f[1])+'-'+str(f[0]))
@@ -1240,7 +1180,6 @@ def string_to_date(str_date):
 def read_date(type_date):
     """
     Funcion que lee una fecha ingresada por el usuario y la retorna en formato de texto DD/MM/AAAA
-
     Comprueba que se ingresen datos numericos. 
     Si type_date es 'antes' valida que las entradas de fechas sean menores 
     a la fecha en la que se hace la solicitud. Si type_date es 'despues'  
@@ -1250,15 +1189,12 @@ def read_date(type_date):
     Parameters
     ----------
     type_date : string - tipo de fecha 
-
     Raises
     ------
     Fecha fuera de rango o cuando se ingresan valores no numericos en la fecha
-
     Returns
     -------
     date_aux: string - fecha
-
     """
     
     correct_date = False
@@ -1324,16 +1260,13 @@ def read_date(type_date):
 def read_hour():
     """
     Lee la hora y la retorna en un tipo time
-
     Raises
     ------
     
         Error cuando los valores ingresados no estan dentro del rango de horas o minutos
-
     Returns
     -------
     hora_aux : time
-
     """    
     correct_type = False
     while not correct_type:   
@@ -1364,11 +1297,9 @@ def read_hour():
 def main():
     """
     Funcion principal con la logica del menu y el llamado a otras funciones
-
     Returns
     -------
     None.
-
     """    
        
     con=sql_connection()    
