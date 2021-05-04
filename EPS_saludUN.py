@@ -923,7 +923,7 @@ def menu_calendar_vaccune_general():
     -------
     None.
 
-    """
+    """   
     clear_screen()
     print('''#############################################################################################
                                      Consulta general calendario de vacunacion
@@ -931,12 +931,16 @@ def menu_calendar_vaccune_general():
     
     Ordenar calendario por
     
-    1. Nombre de afiliado
-    2. Apellido de afiliado
-    3. Id afiliado
-    4. Vacuna a aplicar
-    5. Fecha-Hora cita
-    
+    0. Fecha
+    1. Id afiliado
+    2. Nombre afiliado
+    3. Apellido afiliado
+    4. Ciudd de vacunacion
+    5. Direccion de residencia
+    6. Telefono de contacto
+    7. Correo de contacto
+    8. Vacuna asignada
+    9. Numero de lote de vacuna
     
     ''')    
     
@@ -1011,8 +1015,80 @@ def menu_send_mail():
 #############################################################################################
          
     ''')  
-    
-  
+
+def print_individual_calendar(calendario):
+    """
+    Recibe el id del afiliado e imprime la informacion de su cita de vacunacion, 
+    los datos del afiliado y la vacuna que se aplicará.
+
+    Parameters
+    ----------
+    calendario : list
+
+    Returns
+    -------
+    None.
+
+    """
+    idafiliado = input('Ingrese el id del afiliado a consultar: ')
+    none_afiliado = True   
+    for row in calendario:
+        if idafiliado == str(row[1]):
+            #fecha|idafiliado|nombre|apellido|ciudad|direccion|telefono|correo|fabricante|no lote
+            fecha = str(row[0].day)+'/'+str(row[0].month)+'/'+str(row[0].year)
+            hora = str(row[0].hour)+':'+str(row[0].minute)
+            print('Fecha de vacunacion: ',fecha)
+            print('Hora de vacunacion: ',hora)
+            print('Ciudad de vacunacion: ', row[4])
+            print('Id afiliado: ', row[1])
+            print('Nombre afiliado: ', row[2])
+            print('Apellido afiliado: ', row[3])
+            print('Direccion de residencia: ', row[5])
+            print('Telefono afiliado: ', row[6])
+            print('Correo de contacto: ', row[7])
+            print('Vacuna aplicada: ', row[8])
+            print('Lote de vacuna: ', row[9])  
+            none_afiliado = False
+    if none_afiliado or len(calendario)==0:
+        print("No hay ninguna cita vigente para el afiliado con identificacion: ", idafiliado )            
+
+def print_general_calendar(calendario,indice_orden):
+    """
+    Imprime los datos ordenados de acuerdo con el indice de ordenamiento.
+
+    Parameters
+    ----------
+    calendario : list
+    indice_orden : integer
+
+    Returns
+    -------
+    None.
+
+    """
+    if len(calendario)==0:
+        print("No hay un calendario vigente.")
+    else:
+        #organiza la lista
+        ordenados = sorted(calendario, key=lambda c : c[indice_orden])       
+        for row in ordenados:            
+            #fecha|idafiliado|nombre|apellido|ciudad|direccion|telefono|correo|fabricante|no lote
+            fecha = str(row[0].day)+'/'+str(row[0].month)+'/'+str(row[0].year)
+            hora = str(row[0].hour)+':'+str(row[0].minute)
+            print('Fecha de vacunacion: ',fecha)
+            print('Hora de vacunacion: ',hora)
+            print('Ciudad de vacunacion: ', row[4])
+            print('Id afiliado: ', row[1])
+            print('Nombre afiliado: ', row[2])
+            print('Apellido afiliado: ', row[3])
+            print('Direccion de residencia: ', row[5])
+            print('Telefono afiliado: ', row[6])
+            print('Correo de contacto: ', row[7])
+            print('Vacuna aplicada: ', row[8])
+            print('Lote de vacuna: ', row[9]) 
+            print('---------------------------------------------------------------------------')
+            
+         
 ##########################################################################################################
 #                                        Bussisnes logic
 ##########################################################################################################
@@ -1274,7 +1350,7 @@ def read_hour():
     while not correct_type:   
         try:
             m=int(input("minuto: "))
-            if(m>=0 and h<=60):
+            if(m>=0 and m<=60):
                 correct_type = True
             else:                    
                 raise 
@@ -1300,10 +1376,9 @@ def main():
     create_table_vaccine_lot(con)
     create_table_plan_vaccine(con)
     calendario = []
+    
     salir=False
-    while not salir: 
-
-        print(type((1,2)))         
+    while not salir:         
         menu()
         option = input('Ingrese una opcion: ')
             
@@ -1329,10 +1404,10 @@ def main():
                         option = input('Ingrese una opcion: ')
                         if(option=='1'): #Vacunacion
                             update_affiliate_vaccine(con)
-                            input('Presione cualquier tecla para continuar...')
+                            input('Presione Enter para continuar...')
                         elif(option == '2'): #Desafiliacion
                             update_disaffiliated(con)
-                            input('Presione cualquier tecla para continuar...')
+                            input('Presione Enter para continuar...')
                         elif(option == 'b' or option == 'B'): # Volver al menu anterior
                             back = True
                         elif(option == 'e' or option == 'E'): # Salir del programa
@@ -1345,7 +1420,7 @@ def main():
                 elif(option == '3'): # Consultar afiliado
                     menu_info_affiliate()
                     sql_fetch_affiliate(con)
-                    input('Presione cualquier tecla para continuar...')
+                    input('Presione Enter para continuar...')
                     
                 elif(option == 'b' or option == 'B'): # Volver al menu anterior
                     back = True
@@ -1364,11 +1439,11 @@ def main():
                     menu_new_vaccine()
                     vaccine=read_info_vaccine_lot()
                     insert_vaccine_lot(con,vaccine)
-                    input('Presione cualquier tecla para continuar...')
+                    input('Presione Enter para continuar...')
                 elif(option == '2'): #consultar lote vacunacion
                     menu_info_vaccine()
                     sql_fetch_vaccine_lot(con)
-                    input('Presione cualquier tecla para continuar...')
+                    input('Presione Enter para continuar...')
                 elif(option == 'b' or option == 'B'): # Volver al menu anterior
                     back = True
                 elif(option == 'e' or option == 'E'): # Salir del programa
@@ -1386,12 +1461,12 @@ def main():
                     menu_new_plan_vaccine()
                     plan = read_info_plan()
                     insert_plan_vaccine(con, plan)
-                    input('Presione cualquier tecla para continuar...')
+                    input('Presione Enter para continuar...')
                     
                 elif(option == '2'): #consultar plan de vacunacion
                     menu_info_plan_vaccine()
                     sql_fetch_plan(con)
-                    input('Presione cualquier tecla para continuar...')
+                    input('Presione Enter para continuar...')
                 elif(option == 'b' or option == 'B'): # Volver al menu anterior
                     back = True
                 elif(option == 'e' or option == 'E'): # Salir del programa
@@ -1400,30 +1475,61 @@ def main():
                 else:
                     print('Opcion no valida')
                     
-        elif(option == '4'): #menu agenda de vacunacion             
-                     
+        elif(option == '4'): #menu calendario de vacunacion             
+           
             back = False
             while not back:
                 menu_calendar_vaccune()               
-                
+                    
                 #Organizar e ingresar los datos en la tabla calendario
-
+    
                 option = input('Ingrese una opcion: ')
-                if(option=='1'): #consulta general calendario
+                if(option=='1'): #consulta general calendario                    
                     
-                    menu_calendar_vaccune_general()
-                    input('Presione cualquier tecla para continuar...')
-                    
+                    if len(calendario)==0:
+                        print('No hay un calendario de vacunaion vigente')
+                        input('Presione Enter para continuar...')
+                    else: 
+                        menu_calendar_vaccune_general()
+                        opciones = {'0':'Ordenado por fecha',
+                                    '1':'Ordenado por id afiliado',
+                                    '2':'Ordenado por nombre',
+                                    '3':'Ordenado por apellido',
+                                    '4':'Ordenado por ciudad',
+                                    '5':'Ordenado por direccion',
+                                    '6':'Ordenado por telefono',
+                                    '7':'Ordenado por correo',
+                                    '8':'Ordenado por fabricante',
+                                    '9':'Ordenado por lote'}
+                        
+                        
+                        #fecha|idafiliado|nombre|apellido|ciudad|direccion|telefono|correo|fabricante|no lote
+                        while True:
+                            option = input('Ingrese la opcion de ordenamiento')
+                            if option in opciones.keys():
+                                clear_screen()
+                                print('    '*5,opciones[option])
+                                print('---------------------------------------------------------------------------')
+                                print_general_calendar(calendario,int(option))
+                                break
+                            else:
+                                print('Opcion incorrecta')                    
+                        input('Presione Enter para continuar...')
+                        
                 elif(option == '2'): #consulta individual calendario                    
                     menu_calendar_vaccune_individual()
-                    input('Presione cualquier tecla para continuar...')
+                    print_individual_calendar(calendario)
+                    input('Presione Enter para continuar...')
                 elif(option == '3'): #crear calendario                    
                     menu_new_calendar_vaccune()
                     calendario = create_calendar(con)
-                    input('Presione cualquier tecla para continuar...') 
+                    input('Presione Enter para continuar...') 
                 elif(option == '4'):#Enviar email a los afiliados
                     menu_send_mail()
-                    send_mail(calendario)
+                    if len(calendario)==0:
+                        print('No hay un calendario de vacunaion vigente')
+                    else:    
+                        send_mail(calendario)
                 elif(option == 'b' or option == 'B'): # Volver al menu anterior
                     back = True
                 elif(option == 'e' or option == 'E'): # Salir del programa4
