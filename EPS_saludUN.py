@@ -61,7 +61,7 @@ def create_table_affiliate(con):
     cursorObj.execute("CREATE TABLE IF NOT EXISTS afiliados(id integer PRIMARY KEY,nombre text,apellidos text,direccion text,telefono real,email text, ciudad text,nacimiento text,afiliacion text,desafiliacion text,vacunado text)")
     con.commit()
  
-def read_info_affiliate():  
+def read_info_affiliate(con):  
     """Lee la informacion de un afiliado.
     
     Retorna una tupla con los datos del afiliado. Con fecha de desafiliacion por defecto 00/00/0000 y estado vacunado 'no'
@@ -73,8 +73,10 @@ def read_info_affiliate():
     Returns
     -------
     afiliado : tuple
-    """ 
-    #id afiliado       
+    """
+    
+    cursorObj = con.cursor()
+    #id afiliado        
     correct_type = False
     while correct_type==False:
         try:
@@ -82,11 +84,19 @@ def read_info_affiliate():
             if len(str(i))>12:
                 print('''la información suministrada no debe ser mayor a doce digitos
                             intente de nuevo...''')
-         
             else:
                 id=str(i)
-                correct_type=True
-            
+                if int(id) < 0:
+                    print('Debe ser un numero positivo')
+                else:
+                    buscar_afiliado='SELECT * FROM afiliados' 
+                    cursorObj.execute(buscar_afiliado)
+                    afiliados = cursorObj.fetchall()
+                    for row in afiliados:
+                        if int(id)==row[0]:
+                            print("Número de identificación repetido")
+                            raise    
+                    correct_type = True
         except:
             print('''la información suministrada solamente debe tener números
                        intente de nuevo...''')
@@ -116,7 +126,8 @@ def read_info_affiliate():
             if len(str(t))>12:
                 print('''la información suministrada no debe ser mayor a doce digitos
                             intente de nuevo...''')
-                
+            if t < 0:
+                    print('Debe ser un numero positivo')
             else:
                 telefono=str(t)
                 telefono = telefono.ljust(12)
@@ -149,6 +160,8 @@ def read_info_affiliate():
     desafiliacion = '00/00/0000'        
     #estado de vacunacion
     vacunado='no'
+
+    con.commit()
             
     afiliado=(id ,nombre,apellido ,direccion,telefono ,email, ciudad ,nacimiento,afiliacion,desafiliacion,vacunado )
     
@@ -259,7 +272,7 @@ def create_table_vaccine_lot(con):
                       imagen text)""")
     con.commit()
 
-def read_info_vaccine_lot():
+def read_info_vaccine_lot(con):
     """Lee la informacion del lote de vacunas
     
     Recibe los datos dados por el usuario y los retorna como una tupla
@@ -269,6 +282,8 @@ def read_info_vaccine_lot():
     lote_in : tuple
     """
 
+    cursorObj=con.cursor()
+    
     #lote
     correct_type = False
     while not correct_type:   
@@ -276,12 +291,23 @@ def read_info_vaccine_lot():
             i=int(input("numero de lote: "))
             if len(str(i))>12:
                 print('''El número del lote no debe ser mayor a doce dígitos''')
-            else:    
+            else:
                 lote=str(i)
-                lote=lote.rjust(12, '0')
-                correct_type = True
+                lote=lote.ljust(12)
+                if int(lote) < 0:
+                    print('Debe ser un numero positivo')
+                else:
+                    buscar_lote='SELECT * FROM lote_Vacuna' 
+                    cursorObj.execute(buscar_lote)
+                    lotes = cursorObj.fetchall()
+                    for row in lotes:
+                        if int(lote)==row[0]:
+                            print("Número de identificación repetido")
+                            raise
+                    correct_type = True
         except:
-            print('Entrada invalida, por favor digite solo numeros enteros')
+            print('Entrada invalida, intentelo de nuevo')
+            
     #fabricante
     lista= {'1':'Sinovac', '2':'Pfizer', '3':'Moderna', '4':'SputnikV', '5':'AstraZeneca', '6':'Sinopharm', '7':'Covaxim'}
     correct_type = False
@@ -292,49 +318,66 @@ def read_info_vaccine_lot():
             fabricante = lista[option]
             correct_type = True
         else: 
-            print("Opción no valida, por favor ingrese un valor valido")            
+            print("Opción no valida, por favor ingrese un valor valido")
+            
     #tipo de vacuna     
     lista= {'Sinovac':'Virus desactivado', 'Pfizer':'ARN/ADN', 'Moderna':'ARN/ADN', 'SputnikV':'Vector viral', 'AstraZeneca':'Vector viral','Sinopharm':'Virus desactivado','Covaxim':'Virus desactivado'}
     option = fabricante
     tipo_vacuna = lista[option]
+    
     #cantidad recibida
     correct_type = False
     while not correct_type:   
         try:
             i=int(input("Cantidad recibida: "))
-            cantidad_recibida=str(i)
-            cantidad_recibida=cantidad_recibida.ljust(6)
-            correct_type = True
+            if i < 0:
+                print('Debe ser un numero positivo')
+            else:
+                cantidad_recibida=str(i)
+                cantidad_recibida=cantidad_recibida.ljust(6)
+                correct_type = True
         except:
             print('Entrada invalida, por favor digite solo numeros enteros')
+            
     #cantidad usada
-    cantidad_usada=0                
+    cantidad_usada=0
+    
     #dosis necesaria ---- todas son 2, en intervalos diferentes
     lista= {'Sinovac':' en 21 dias', 'Pfizer':' en 21 dias', 'Moderna':' en 28 dias', 'SputnikV':' en 21 dias', 'AstraZeneca':'Vector viral','Sinopharm':'Virus desactivado','Covaxim':'Virus desactivado'}
     option = fabricante
-    dosis = '2'+lista[option]                
+    dosis = '2'+lista[option]
+    
     #temperatura
     lista= {'Sinovac':'8°C', 'Pfizer':'8°C', 'Moderna':'-25°C', 'SputnikV':'-18°C', 'AstraZeneca':'8°C', 'Sinopharm':'8°C', 'Covaxim':'40°C'}
     option = fabricante
     temperatura = lista[option]
+    
     #efectividad
     lista= {'Sinovac':'50.38%', 'Pfizer':'95%', 'Moderna':'95%', 'SputnikV':'91%', 'AstraZeneca':'76%', 'Sinopharm':'79%', 'Covaxim':'81%'}
     option = fabricante
     efectividad = lista[option]
+    
     #tiempo de proteccion
     correct_type = False
     while not correct_type:   
         try:
             i=int(input("Tiempo de proteccion en meses: "))
-            tiempo_proteccion=str(i)
-            tiempo_proteccion=tiempo_proteccion.ljust(2)+' meses'
-            correct_type = True
+            if i < 0:
+                print('Debe ser un numero positivo')
+            else:
+                tiempo_proteccion=str(i)
+                tiempo_proteccion=tiempo_proteccion.ljust(2)+' meses'
+                correct_type = True
         except:
-            print('Entrada invalida, por favor digite solo numeros enteros')            
+            print('Entrada invalida, por favor digite solo numeros enteros')
+            
     #fecha de vencimiento
-    fecha_vencimiento=read_date('despues')    
+    fecha_vencimiento=read_date('despues')
+    
     #ruta de la imagen
     imagen=image(lote,fabricante, fecha_vencimiento)
+
+    con.commit()
     
     lote_in=(lote, fabricante, tipo_vacuna, cantidad_recibida, cantidad_usada, dosis, temperatura, efectividad, tiempo_proteccion, fecha_vencimiento, imagen)
     
@@ -465,9 +508,19 @@ def read_info_plan(con):
             idplan = str(i)
             if len(idplan)>3:
                 print('''El id del plan debe ser de máximio 3 digitos''')
-            else:   
+            else:
                 idplan = idplan.ljust(3)
-                correct_type = True
+                if int(idplan) < 0:
+                    print('Debe ser un numero positivo')
+                else:
+                    buscar_plan='SELECT * FROM planes' 
+                    cursorObj.execute(buscar_plan)
+                    planes = cursorObj.fetchall()
+                    for row in planes:
+                        if int(idplan)==row[0]:
+                            print("Número de identificación repetido")
+                            raise
+                    correct_type = True         
         except:
             print('Entrada invalida, intentelo de nuevo')
             
@@ -481,9 +534,12 @@ def read_info_plan(con):
         while not correct_type2:   
             try:
                 i=int(input("edad mínima: "))
-                edad_min = str(i)
-                edad_min = edad_min.ljust(3)
-                correct_type2 = True
+                if i < 0:
+                    print('Debe ser un numero positivo')
+                else:
+                    edad_min = str(i)
+                    edad_min = edad_min.ljust(3)
+                    correct_type2 = True
             except:
                 print('Entrada invalida, intentelo de nuevo')
             
@@ -492,7 +548,9 @@ def read_info_plan(con):
         while not correct_type3:   
             try:
                 i=int(input("edad máxima: "))
-                if int(edad_min)>= i:
+                if i < 0:
+                    print('Debe ser un numero positivo')
+                elif int(edad_min)>= i:
                     print('''La edad maxima debe ser mayor a la edad minima
                             intentelo de nuevo...''')
                 else:
@@ -1353,7 +1411,7 @@ def main():
                     
                 if(option == '1'):  # ingresar nuevo afiliado
                     menu_new_affiliate()                  
-                    afiliado=read_info_affiliate()
+                    afiliado=read_info_affiliate(con)
                     insert_affiliate(con,afiliado)
                     input('Nuevo afiliado registrado. Presione cualquier tecla para continuar...')
                     
@@ -1398,7 +1456,7 @@ def main():
                 option = input('Ingrese una opcion: ')
                 if(option=='1'): #crear lote Vacunacion
                     menu_new_vaccine()
-                    vaccine=read_info_vaccine_lot()
+                    vaccine=read_info_vaccine_lot(con)
                     insert_vaccine_lot(con,vaccine)
                     input('Presione Enter para continuar...')
                 elif(option == '2'): #consultar lote vacunacion
