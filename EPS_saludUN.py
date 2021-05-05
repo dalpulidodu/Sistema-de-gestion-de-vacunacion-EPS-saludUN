@@ -436,26 +436,32 @@ def insert_plan_vaccine(con, plan):
     -------
     None.
     """
+        
     cursorObj = con.cursor()
-    cursorObj.execute(
-        'INSERT INTO planes(idplan,edad_min, edad_max, fecha_inicio, fecha_final) VALUES(?, ?, ?, ?,?)',
-        plan)    
+    cursorObj.execute('INSERT INTO planes(idplan,edad_min, edad_max, fecha_inicio, fecha_final) VALUES(?, ?, ?, ?,?)',plan)    
     con.commit()
 
-def read_info_plan():  
+def read_info_plan(con):  
     """Lee la informacion de un plan de vacunación.
     
-    Retorna una tupla con los datos del plan de vacunación. 
+    Retorna una tupla con los datos del plan de vacunación.
+
+    Parameters
+    ----------
+    con : sqlite3.Connection    
       
     Returns
     -------
     planes : tuple
-    """       
+    """
+    
+    cursorObj = con.cursor()
+    
     #id plan de vacunacion
     correct_type = False
     while not correct_type:   
         try:
-            i=int(input("numero de identificacion: "))
+            i=int(input("numero de identificacion del plan: "))
             idplan = str(i)
             if len(idplan)>3:
                 print('''El id del plan debe ser de máximio 3 digitos''')
@@ -464,32 +470,54 @@ def read_info_plan():
                 correct_type = True
         except:
             print('Entrada invalida, intentelo de nuevo')
-    #edad minima plan de vacunacion
-    correct_type2 = False
-    while not correct_type2:   
-        try:
-            i=int(input("edad mínima: "))
-            edad_min = str(i)
-            correct_type2 = True
-        except:
-            print('Entrada invalida, intentelo de nuevo')
-    #edad maxima plan de vacunacion
-    correct_type3 = False
-    while not correct_type3:   
-        try:
-            i=int(input("edad máxima: "))
-            if int(edad_min)>= i:
-                print('''La edad maxima debe ser mayor a la edad minima
-                            intentelo de nuevo...''')
-            else:
-                edad_max = str(i)
-                edad_max = edad_max.ljust(3)
-                correct_type3 = True
-        except:
-            print('Entrada invalida, intentelo de nuevo')
             
-    edad_min = edad_min.ljust(3)
-    
+    #verificacion de rango de edad       
+    correct_plan=False
+    while not correct_plan:
+
+
+        #edad minima plan de vacunacion
+        correct_type2 = False
+        while not correct_type2:   
+            try:
+                i=int(input("edad mínima: "))
+                edad_min = str(i)
+                edad_min = edad_min.ljust(3)
+                correct_type2 = True
+            except:
+                print('Entrada invalida, intentelo de nuevo')
+            
+        #edad maxima plan de vacunacion
+        correct_type3 = False
+        while not correct_type3:   
+            try:
+                i=int(input("edad máxima: "))
+                if int(edad_min)>= i:
+                    print('''La edad maxima debe ser mayor a la edad minima
+                            intentelo de nuevo...''')
+                else:
+                    edad_max = str(i)
+                    edad_max = edad_max.ljust(3)
+                    correct_type3 = True
+            except:
+                print('Entrada invalida, intentelo de nuevo')
+                
+        #rango de edad       
+        try:
+            buscar_plan='SELECT * FROM planes' 
+            cursorObj.execute(buscar_plan)
+            planes = cursorObj.fetchall()
+            for row in planes:
+                if (int(edad_min) > row[2]) or (int(edad_max) < row[1]):
+                    continue
+                else:
+                    raise
+            correct_plan=True
+        except:
+            print('''El rango de edad interfiere con otros planes
+                        intentelo de nuevo...''')
+
+
     correct_type4=False
     #fecha inicio plan de vacunacion
     fecha_inicio = read_date('despues')
@@ -501,6 +529,8 @@ def read_info_plan():
             print('''La fecha de inicio no puede ser mayor a la fecha final... ''')
         else:
             correct_type4=True
+
+    con.commit()
        
     planes=(idplan,edad_min,edad_max,fecha_inicio,fecha_final)
     
@@ -1390,7 +1420,7 @@ def main():
                 option = input('Ingrese una opcion: ')
                 if(option=='1'): #crear plan de Vacunacion
                     menu_new_plan_vaccine()
-                    plan = read_info_plan()
+                    plan = read_info_plan(con)
                     insert_plan_vaccine(con, plan)
                     input('Presione Enter para continuar...')
                     
