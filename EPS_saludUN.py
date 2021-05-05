@@ -6,24 +6,20 @@ Creado por:
     David Lizzane Pulido Duquino
     Carlos Jesus Ramirez Guerrero
 """
+import os
+import sqlite3
+import smtplib
 from datetime import time
 from datetime import date
 from datetime import timedelta
 from datetime import datetime
-
-import os
-import sqlite3
-from sqlite3 import Error
-
-from PIL import Image, ImageDraw, ImageFont
-
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import smtplib
+from PIL import Image, ImageDraw, ImageFont
+from sqlite3 import Error
 ##########################################################################################################
 #                                             Data
 ##########################################################################################################
-
 def sql_connection():
     """Crea la base de datos.
     
@@ -48,23 +44,37 @@ def create_table_affiliate(con):
     """Crea una tabla con los parametros de un afiliado
     
     Encabezado de la tabla:
-    (id,nombre, apellidos,direccion, telefono, email, ciudad, nacimiento,fecha de afiliacion, fecha de desafiliacion, vacunado)
+    (id,nombre, apellidos,direccion, telefono, email, ciudad, nacimiento,
+    fecha de afiliacion, fecha de desafiliacion, vacunado)
     
     Parameters
     ----------
     con : sqlite3.Connection Conexion con la base de datos SQL
+    
     Returns
     -------
     None.
     """
     cursorObj = con.cursor()
-    cursorObj.execute("CREATE TABLE IF NOT EXISTS afiliados(id integer PRIMARY KEY,nombre text,apellidos text,direccion text,telefono real,email text, ciudad text,nacimiento text,afiliacion text,desafiliacion text,vacunado text)")
+    cursorObj.execute("""CREATE TABLE IF NOT EXISTS afiliados(
+                    id integer PRIMARY KEY,
+                    nombre text,
+                    apellidos text,
+                    direccion text,
+                    telefono real,
+                    email text,
+                    ciudad text,
+                    nacimiento text,
+                    afiliacion text,
+                    desafiliacion text,
+                    vacunado text)""")
     con.commit()
  
 def read_info_affiliate(con):  
     """Lee la informacion de un afiliado.
     
-    Retorna una tupla con los datos del afiliado. Con fecha de desafiliacion por defecto 00/00/0000 y estado vacunado 'no'
+    Retorna una tupla con los datos del afiliado. Con fecha de desafiliacion por defecto 00/00/0000
+    y estado vacunado 'no'
     
     Excepct
     -------
@@ -80,10 +90,10 @@ def read_info_affiliate(con):
     correct_type = False
     while correct_type==False:
         try:
-            i=int(input("numero de identificacion: "))
+            i=int(input("Numero de identificacion: "))
             if len(str(i))>12:
-                print('''la información suministrada no debe ser mayor a doce digitos
-                            intente de nuevo...''')
+                print('''La información suministrada no debe ser mayor a doce digitos
+                            Intente de nuevo...''')
             else:
                 id=str(i)
                 if int(id) < 0:
@@ -98,22 +108,22 @@ def read_info_affiliate(con):
                             raise    
                     correct_type = True
         except:
-            print('''la información suministrada solamente debe tener números
-                       intente de nuevo...''')
+            print('''La información suministrada solamente debe tener números
+                       Intente de nuevo...''')
     #nombre                  
-    nombre=(input("nombre: "))
+    nombre=(input("Nombre: "))
     if len(nombre)>20:
         nombre=nombre[:20]
     else:
         nombre = nombre.ljust(20)
     #apellido
-    apellido=(input("apellido: "))
+    apellido=(input("Apellido: "))
     if len(apellido)>20:
         apellido=apellido[:20]
     else:
         apellido = apellido.ljust(20)
     #direccion
-    direccion=(input("direccion: "))
+    direccion=(input("Direccion: "))
     if len(direccion)>20:
         direccion=direccion[:20]
     else:
@@ -122,23 +132,24 @@ def read_info_affiliate(con):
     correct_type = False
     while not correct_type:   
         try:
-            t=int(input("telefono: "))
+            t=int(input("Telefono: "))
             if len(str(t))>12:
-                print('''la información suministrada no debe ser mayor a doce digitos
-                            intente de nuevo...''')
+                print('''La información suministrada no debe ser mayor a doce digitos
+                            Intente de nuevo...''')
             if t < 0:
                     print('Debe ser un numero positivo')
             else:
                 telefono=str(t)
-                telefono = telefono.ljust(12)
+                telefono = telefono.rjust(12)
                 correct_type = True
         except:
-            print('Entrada invalida, intentelo de nuevo')
+            print('''La información suministrada solamente debe tener números
+                       Intente de nuevo...''')
     #email       
     correct_type=False
     while correct_type==False:
     
-        email=(input("email: "))
+        email=(input("E-mail: "))
         
         if email.find("@")>=0 and email.find(".")>=0:
             email = email.ljust(20)
@@ -147,7 +158,7 @@ def read_info_affiliate(con):
             print('''El correo debe tener un '@' y un '.' para que sea válido
                         intentelo de nuevo''')        
     #ciudad
-    ciudad=(input("ciudad: "))
+    ciudad=(input("Ciudad: "))
     if len(ciudad)>20:
         ciudad=ciudad[:20]
     else:
@@ -180,10 +191,22 @@ def insert_affiliate(con,afiliado):
     None.
     """
     cursorObj = con.cursor()
-    cursorObj.execute('''INSERT INTO afiliados (id ,nombre,apellidos ,direccion,telefono ,email, ciudad ,nacimiento,afiliacion,desafiliacion,vacunado) VALUES(?, ?, ?, ?,?,?,?, ?, ?, ?,?)''',afiliado)
+    cursorObj.execute('''INSERT INTO afiliados (
+                        id,
+                        nombre,
+                        apellidos,
+                        direccion,
+                        telefono,
+                        email,
+                        ciudad,
+                        nacimiento,
+                        afiliacion,
+                        desafiliacion,
+                        vacunado)
+                        VALUES(?, ?, ?, ?,?,?,?, ?, ?, ?,?)''',afiliado)
     con.commit()
 
-def update_affiliate_vaccine(con):
+def update_affiliate_vaccine(con,calendario):
     """ Actualiza el estado de vacunacion de un afiliado
     
     Recibe el id de afiliado del usuario y cambia el campo de vacunado a 'si'
@@ -196,9 +219,29 @@ def update_affiliate_vaccine(con):
     None.
     """
     cursorObj = con.cursor()
-    vacunado=input("identificacion del afiliado vacunado: ")
-    actualizar='update afiliados SET vacunado = "si" where id ='+vacunado
-    cursorObj.execute(actualizar)
+
+    correct_type = False
+    while correct_type==False:
+        try:
+            id_afiliado=int(input("Identificacion del afiliado vacunado: "))
+            correct_type = True
+        except:
+            print('''La información suministrada solamente debe tener números
+                       Intente de nuevo...''')
+            
+    #calendario=[fecha,idafiliado,nombre,apellido,ciudad,direccion,telefono,correo,fabricante,no lote]
+    afiliado_en_calendario = False
+    for cita in calendario:
+        if id_afiliado == cita[1]:
+            update_increment_lot(con,cita[8],1)
+            afiliado_en_calendario = True
+            
+    if  afiliado_en_calendario:       
+        actualizar='update afiliados SET vacunado = "si" where id ='+str(id_afiliado)
+        print('El usuario con ID: ',id_afiliado,' ha sido vacunado.')
+        cursorObj.execute(actualizar)
+    else:
+        print('El afiliado no tiene citas asignadas, por ende no puede ser vacunado.')
     con.commit()
     
 def update_disaffiliated(con):
@@ -215,7 +258,7 @@ def update_disaffiliated(con):
     None.
     """
     cursorObj = con.cursor()
-    desafiliado=input("identificacion del afiliado a desafiliar: ")
+    desafiliado=input("Identificacion del afiliado a desafiliar: ")
     fecha = date_to_string(date.today())  
     print(fecha)      
     actualizar='update afiliados SET desafiliacion = "'+fecha+'" where id ='+desafiliado
@@ -290,7 +333,7 @@ def read_info_vaccine_lot(con):
     correct_type = False
     while not correct_type:   
         try:
-            i=int(input("numero de lote: "))
+            i=int(input("Numero de lote: "))
             if len(str(i))>12:
                 print('''El número del lote no debe ser mayor a doce dígitos''')
             else:
@@ -308,7 +351,8 @@ def read_info_vaccine_lot(con):
                             raise
                     correct_type = True
         except:
-            print('Entrada invalida, intentelo de nuevo')
+            print('''La información suministrada solamente debe tener números
+                       Intente de nuevo...''')
             
     #fabricante
     lista= {'1':'Sinovac', '2':'Pfizer', '3':'Moderna', '4':'SputnikV', '5':'AstraZeneca', '6':'Sinopharm', '7':'Covaxim'}
@@ -399,11 +443,22 @@ def insert_vaccine_lot(con,vaccine):
     None.
     """
     cursorObj = con.cursor()
-    cursorObj.execute("INSERT INTO lote_Vacuna(lote, fabricante, tipo_vacuna, cantidad_recibida, cantidad_usada, dosis, temperatura, efectividad, tiempo_proteccion, fecha_vencimiento, imagen) VALUES (?,?,?,?,?,?,?,?,?,?,?)", vaccine)
+    cursorObj.execute("""INSERT INTO lote_Vacuna(
+                    lote,
+                    fabricante,
+                    tipo_vacuna,
+                    cantidad_recibida,
+                    cantidad_usada,
+                    dosis,
+                    temperatura,
+                    efectividad,
+                    tiempo_proteccion,
+                    fecha_vencimiento,
+                    imagen) VALUES (?,?,?,?,?,?,?,?,?,?,?)""", vaccine)
     con.commit()
 
 
-def update_increment_lot(con,lote,y):
+def update_increment_lot(con,num_lote,y):
     """ actualiza el numero de vacunas usadas en la base de datos
     
     Parameters
@@ -418,8 +473,17 @@ def update_increment_lot(con,lote,y):
     """
 
     cursorObj = con.cursor()
-    s=y*2
-    actualizar='update Lote_Vacuna SET cantidad_usada = "'+str(s)+'" where lote ='+str(lote)
+    #busca el lote de vacunacion 
+    buscar='SELECT * FROM lote_Vacuna where lote='+str(num_lote)
+    cursorObj.execute(buscar)
+    filas = cursorObj.fetchall()
+    #Busca la cantidad usada de ese lote de vacunacion
+    for row in filas:
+        cantidad_usada = int(row[4])
+    #Incrementa la cantidad usada    
+    cantidad_usada += y*2
+    #Actualiza la informacion de cantidad usada
+    actualizar='update Lote_Vacuna SET cantidad_usada = "'+str(cantidad_usada)+'" where lote ='+str(num_lote)
     cursorObj.execute(actualizar)
     con.commit()
     
@@ -439,7 +503,7 @@ def sql_fetch_vaccine_lot(con):
     """
     
     cursorObj = con.cursor()
-    num_lote=input("numero de lote a consultar: ")
+    num_lote=input("Numero de lote a consultar: ")
     buscar='SELECT * FROM lote_Vacuna where lote='+num_lote
     cursorObj.execute(buscar)
     filas = cursorObj.fetchall()
@@ -697,13 +761,12 @@ def create_calendar(con):
     calendario = []
     indice = 0
     for vacuna in vacunas:
-        dosis_disponibles = vacuna[3]//2 #como son 2 dosis por persona la cantidad se reduce a la mitad
+        dosis_disponibles = (vacuna[3]-vacuna[4])//2 #recibidas menos usadas, como son 2 dosis por persona la cantidad se reduce a la mitad
         while indice < len(citas):
             if dosis_disponibles > 0:
-                #fecha|idafiliado|nombre|apellido|ciudad|direccion|telefono|correo|fabricante|no lote
+                #calendario=[fecha,idafiliado,nombre,apellido,ciudad,direccion,telefono,correo,fabricante,no lote]
                 cita = fechas_citas[indice]               
-                calendario.append((cita,citas[cita][0],citas[cita][1],citas[cita][2],citas[cita][6],citas[cita][3],citas[cita][4],citas[cita][5],vacuna[0],vacuna[1]))
-                update_increment_lot(con,vacuna[0],len(citas))
+                calendario.append((cita,citas[cita][0],citas[cita][1],citas[cita][2],citas[cita][6],citas[cita][3],citas[cita][4],citas[cita][5],vacuna[0],vacuna[1]))                
                 dosis_disponibles -= 1
                 indice += 1
             else:
@@ -1084,7 +1147,7 @@ def print_individual_calendar(calendario):
     none_afiliado = True   
     for row in calendario:
         if idafiliado == str(row[1]):
-            #fecha|idafiliado|nombre|apellido|ciudad|direccion|telefono|correo|fabricante|no lote
+            #calendario=[fecha,idafiliado,nombre,apellido,ciudad,direccion,telefono,correo,fabricante,no lote]
             fecha = str(row[0].day)+'/'+str(row[0].month)+'/'+str(row[0].year)
             hora = str(row[0].hour)+':'+str(row[0].minute)
             print('Fecha de vacunacion: ',fecha)
@@ -1119,7 +1182,7 @@ def print_general_calendar(calendario,indice_orden):
         #organiza la lista
         ordenados = sorted(calendario, key=lambda c : c[indice_orden])       
         for row in ordenados:            
-            #fecha|idafiliado|nombre|apellido|ciudad|direccion|telefono|correo|fabricante|no lote
+            #calendario=[fecha,idafiliado,nombre,apellido,ciudad,direccion,telefono,correo,fabricante,no lote]
             fecha = str(row[0].day)+'/'+str(row[0].month)+'/'+str(row[0].year)
             hora = str(row[0].hour)+':'+str(row[0].minute)
             print('Fecha de vacunacion: ',fecha)
@@ -1165,8 +1228,8 @@ def send_mail(calendario):
         correo = str(row[7])
         
         message = "Señor afiliado "+nombre+' '+ apellido+' identificado con '+ idafiliado
-        message += ' , tiene una cita de vacunacion el dia '+str(fecha.day)+'/'+str(fecha.month)+'/'+str(fecha.year)+ ' a la hora '+str(fecha.hour)+':'+str(fecha.minute)+' en la ciudad ' + ciudad
-        message += '. Att: EPS UN'
+        message += ' , tiene una cita de vacunacion el dia '+str(fecha.day)+'/'+str(fecha.month)+'/'+str(fecha.year)
+        message +=  ' a la hora '+str(fecha.hour)+':'+str(fecha.minute)+' en la ciudad ' + ciudad+'. Att: EPS UN'
         
         # configura los parametros del mensaje
         password = "proyectopoo"
@@ -1420,14 +1483,13 @@ def main():
                     insert_affiliate(con,afiliado)
                     input('Nuevo afiliado registrado. Presione cualquier tecla para continuar...')
                     
-                elif(option == '2'): # Actualizar estado de afiliado
-                    
+                elif(option == '2'): # Actualizar estado de afiliado                    
                     back = False
                     while not back:
                         menu_state_affiliate()
                         option = input('Ingrese una opcion: ')
                         if(option=='1'): #Vacunacion
-                            update_affiliate_vaccine(con)
+                            update_affiliate_vaccine(con,calendario)                            
                             input('Presione Enter para continuar...')
                         elif(option == '2'): #Desafiliacion
                             update_disaffiliated(con)
@@ -1438,19 +1500,16 @@ def main():
                             back = True
                             salir = True
                         else:
-                            print('Opcion no valida')
-                
-                    
+                            print('Opcion no valida')    
                 elif(option == '3'): # Consultar afiliado
                     menu_info_affiliate()
                     sql_fetch_affiliate(con)
-                    input('Presione Enter para continuar...')
-                    
+                    input('Presione Enter para continuar...')                    
                 elif(option == 'b' or option == 'B'): # Volver al menu anterior
-                    back = True
+                    back = True                    
                 elif(option == 'e' or option == 'E'): # Salir del programa
                     back = True
-                    salir = True
+                    salir = True                    
                 else:
                     print('Opcion no valida')
                     
@@ -1485,8 +1544,7 @@ def main():
                     menu_new_plan_vaccine()
                     plan = read_info_plan(con)
                     insert_plan_vaccine(con, plan)
-                    input('Presione Enter para continuar...')
-                    
+                    input('Presione Enter para continuar...')                    
                 elif(option == '2'): #consultar plan de vacunacion
                     menu_info_plan_vaccine()
                     sql_fetch_plan(con)
@@ -1499,17 +1557,13 @@ def main():
                 else:
                     print('Opcion no valida')
                     
-        elif(option == '4'): #menu calendario de vacunacion             
-           
+        elif(option == '4'): #menu calendario de vacunacion   
             back = False
             while not back:
-                menu_calendar_vaccune()               
-                    
+                menu_calendar_vaccune() 
                 #Organizar e ingresar los datos en la tabla calendario
-    
                 option = input('Ingrese una opcion: ')
-                if(option=='1'): #consulta general calendario                    
-                    
+                if(option=='1'): #consulta general calendario  
                     if len(calendario)==0:
                         print('No hay un calendario de vacunaion vigente')
                         input('Presione Enter para continuar...')
@@ -1525,8 +1579,6 @@ def main():
                                     '7':'Ordenado por correo',
                                     '8':'Ordenado por fabricante',
                                     '9':'Ordenado por lote'}
-                        
-                        
                         #fecha|idafiliado|nombre|apellido|ciudad|direccion|telefono|correo|fabricante|no lote
                         while True:
                             option = input('Ingrese la opcion de ordenamiento')
@@ -1539,7 +1591,6 @@ def main():
                             else:
                                 print('Opcion incorrecta')                    
                         input('Presione Enter para continuar...')
-                        
                 elif(option == '2'): #consulta individual calendario                    
                     menu_calendar_vaccune_individual()
                     print_individual_calendar(calendario)
@@ -1547,6 +1598,7 @@ def main():
                 elif(option == '3'): #crear calendario                    
                     menu_new_calendar_vaccune()
                     calendario = create_calendar(con)
+                    print('Calendario de vacunacion creado')
                     input('Presione Enter para continuar...') 
                 elif(option == '4'):#Enviar email a los afiliados
                     menu_send_mail()
@@ -1564,6 +1616,7 @@ def main():
                         
         elif(option == 'e' or option == 'E'):
             salir = True
+            
         else:    
             print('Opcion no valida')
     
