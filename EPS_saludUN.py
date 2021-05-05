@@ -152,9 +152,11 @@ def read_info_affiliate(con):
         ciudad=ciudad[:20]
     else:
         ciudad = ciudad.ljust(20) 
-    #fecha de nacimiento   
+    #fecha de nacimiento
+    print('Fecha de nacimiento: ')
     nacimiento = read_date('antes')
     #fecha de afiliacion
+    print('Fecha afiliacion: ')
     afiliacion = read_date('antes')
     #fecha de desafiliacion
     desafiliacion = '00/00/0000'        
@@ -372,6 +374,7 @@ def read_info_vaccine_lot(con):
             print('Entrada invalida, por favor digite solo numeros enteros')
             
     #fecha de vencimiento
+    print('Fecha de vencimiento: ')
     fecha_vencimiento=read_date('despues')
     
     #ruta de la imagen
@@ -578,10 +581,12 @@ def read_info_plan(con):
 
     correct_type4=False
     #fecha inicio plan de vacunacion
+    print('Fecha inicio plan de vacunacion: ')
     fecha_inicio = read_date('despues')
     
     while correct_type4==False:
         #fecha final plan de vacunacion
+        print('Fecha final plan de vacunacion: ')
         fecha_final = read_date('despues')       
         if datetime.strptime(fecha_inicio,'%d/%m/%Y')>datetime.strptime(fecha_final,'%d/%m/%Y'):
             print('''La fecha de inicio no puede ser mayor a la fecha final... ''')
